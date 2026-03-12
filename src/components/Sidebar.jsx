@@ -1,0 +1,54 @@
+import { NavLink } from 'react-router-dom'
+
+const navItems = [
+  { to: '/dashboard', icon: '🏠', label: 'Dashboard' },
+  { to: '/project/1', icon: '📁', label: 'Projects' },
+  { to: '/project/1?tab=experiments', icon: '🔬', label: 'Experiments' },
+  { to: '/project/1?tab=insights', icon: '💡', label: 'Insights' },
+  { to: '/graph', icon: '🕸️', label: 'Knowledge Graph' },
+  { to: '/assistant', icon: '🤖', label: 'AI Assistant' },
+  { to: '/similarity', icon: '🔍', label: 'Similarity Check' },
+]
+
+export default function Sidebar() {
+  return (
+    <aside className="w-64 min-h-screen bg-[#1A2B3C] flex flex-col border-r border-white/5 shrink-0">
+      <div className="px-6 py-6">
+        <h1 className="text-2xl font-bold tracking-wider text-[#00B4D8]">NEXUS</h1>
+        <p className="text-xs text-gray-400 mt-1">Research Intelligence</p>
+      </div>
+
+      <nav className="flex-1 px-3 space-y-1">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                isActive
+                  ? 'bg-[#0D1B2A] text-[#00B4D8] border-l-2 border-[#00B4D8]'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
+              }`
+            }
+          >
+            <span className="text-lg">{item.icon}</span>
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="px-4 py-4 border-t border-white/5">
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00B4D8] to-[#1A6FBF] flex items-center justify-center text-sm font-bold">
+            DR
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-white truncate">Dr. Sarah Chen</p>
+            <p className="text-xs text-gray-500">Researcher</p>
+          </div>
+          <button className="text-gray-500 hover:text-white transition-colors">⚙️</button>
+        </div>
+      </div>
+    </aside>
+  )
+}
