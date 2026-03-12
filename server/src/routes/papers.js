@@ -47,10 +47,17 @@ router.post('/project/:projectId', async (req, res, next) => {
       return res.status(400).json({ error: 'Title is required' });
     }
 
+    // Coerce authors: accept string "A, B" or array ["A","B"]
+    const authorsArr = Array.isArray(authors)
+      ? authors
+      : typeof authors === 'string' && authors.trim()
+        ? authors.split(',').map((a) => a.trim()).filter(Boolean)
+        : [];
+
     const paper = await prisma.paper.create({
       data: {
         title,
-        authors: authors || [],
+        authors: authorsArr,
         year: year ? parseInt(year, 10) : null,
         abstract: abstract || null,
         content: content || null,
@@ -80,11 +87,17 @@ router.put('/:id', async (req, res, next) => {
 
     const { title, authors, year, abstract, content, tags, keywords } = req.body;
 
+    const authorsArr = authors === undefined ? undefined
+      : Array.isArray(authors) ? authors
+      : typeof authors === 'string' && authors.trim()
+        ? authors.split(',').map((a) => a.trim()).filter(Boolean)
+        : [];
+
     const updated = await prisma.paper.update({
       where: { id: req.params.id },
       data: {
         ...(title !== undefined && { title }),
-        ...(authors !== undefined && { authors }),
+        ...(authorsArr !== undefined && { authors: authorsArr }),
         ...(year !== undefined && { year: year ? parseInt(year, 10) : null }),
         ...(abstract !== undefined && { abstract }),
         ...(content !== undefined && { content }),
