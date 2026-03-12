@@ -416,7 +416,7 @@ export default function ProjectWorkspace() {
               className="bg-[#150825] text-white text-sm rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
             >
               {allProjects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>{p.title || p.name}</option>
               ))}
             </select>
           </>
@@ -425,7 +425,7 @@ export default function ProjectWorkspace() {
 
       {/* Project Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">{project?.name || 'Project Workspace'}</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">{project?.title || project?.name || 'Project Workspace'}</h1>
         <p className="text-gray-400 text-sm max-w-2xl">{project?.description || ''}</p>
       </div>
 

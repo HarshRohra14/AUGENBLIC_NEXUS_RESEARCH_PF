@@ -141,7 +141,7 @@ export default function InsightGraph() {
               className="bg-[#150825] text-white text-xs rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
             >
               {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>{p.title || p.name}</option>
               ))}
             </select>
           )}

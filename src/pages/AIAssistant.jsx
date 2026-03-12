@@ -34,7 +34,7 @@ export default function AIAssistant() {
     setSending(true)
     try {
       const context = selectedProject
-        ? `Project: ${selectedProject.name}. ${selectedProject.description || ''}`
+        ? `Project: ${selectedProject.title || selectedProject.name}. ${selectedProject.description || ''}`
         : ''
       const result = await api.aiChat(msg, context)
       addMessage('assistant', result.response || result.message || 'No response.')
@@ -51,7 +51,7 @@ export default function AIAssistant() {
     try {
       let result
       const context = selectedProject
-        ? `Project: ${selectedProject.name}. ${selectedProject.description || ''}`
+        ? `Project: ${selectedProject.title || selectedProject.name}. ${selectedProject.description || ''}`
         : ''
       if (action === 'Find Gaps') {
         result = await api.aiGaps(context)
@@ -91,7 +91,7 @@ export default function AIAssistant() {
               onChange={(e) => setSelectedProject(projects.find((p) => p.id === e.target.value) || null)}
               className="bg-[#0A000F] text-white text-xs rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
             >
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.title || p.name}</option>)}
             </select>
           )}
         </div>
@@ -168,7 +168,7 @@ export default function AIAssistant() {
 
         {selectedProject ? (
           <div className="bg-[#0A000F] rounded-xl p-4 border border-white/5 mb-6">
-            <h3 className="text-sm font-medium text-[#A855F7] mb-1">{selectedProject.name}</h3>
+            <h3 className="text-sm font-medium text-[#A855F7] mb-1">{selectedProject.title || selectedProject.name}</h3>
             <p className="text-xs text-gray-400 line-clamp-3">{selectedProject.description}</p>
           </div>
         ) : (

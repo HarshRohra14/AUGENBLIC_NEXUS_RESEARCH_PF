@@ -33,7 +33,7 @@ export const api = {
   getProjects: () => request('/api/projects'),
   getProject: (id) => request(`/api/projects/${id}`),
   getProjectStats: (id) => request(`/api/projects/${id}/stats`),
-  createProject: (data) => request('/api/projects', { method: 'POST', body: JSON.stringify(data) }),
+  createProject: ({ name, ...rest }) => request('/api/projects', { method: 'POST', body: JSON.stringify({ title: name, ...rest }) }),
   updateProject: (id, data) => request(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProject: (id) => request(`/api/projects/${id}`, { method: 'DELETE' }),
 

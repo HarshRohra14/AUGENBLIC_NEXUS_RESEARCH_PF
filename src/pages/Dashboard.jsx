@@ -178,7 +178,7 @@ export default function Dashboard() {
                   className="bg-[#150825] rounded-xl p-5 border border-white/5 hover:border-[#A855F7]/30 hover:shadow-lg hover:shadow-[#A855F7]/5 transition-all duration-300 group"
                 >
                   <h3 className="font-semibold text-white group-hover:text-[#A855F7] transition-colors text-sm mb-2">
-                    {project.name}
+                    {project.title || project.name}
                   </h3>
                   <p className="text-xs text-gray-400 mb-4 line-clamp-2">{project.description}</p>
 
