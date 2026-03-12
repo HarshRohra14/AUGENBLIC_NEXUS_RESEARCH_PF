@@ -7,6 +7,7 @@ import InsightGraph from './pages/InsightGraph'
 import AIAssistant from './pages/AIAssistant'
 import SimilarityChecker from './pages/SimilarityChecker'
 import Login from './pages/Login'
+import OAuthCallback from './pages/OAuthCallback'
 import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<OAuthCallback />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/project/:id" element={<ProjectWorkspace />} />

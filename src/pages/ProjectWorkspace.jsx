@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
-import { ToastSave } from '@/components/ui/toast-save'
 
 const tagColors = {
   CNN: 'bg-purple-500/20 text-purple-300',
@@ -29,7 +28,7 @@ const statusColors = {
 
 const tabs = ['Papers', 'Experiments', 'Insights', 'Workflow']
 
-function PapersTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved }) {
+function PapersTab({ projectId }) {
   const [papers, setPapers] = useState([])
   const [loading, setLoading] = useState(true)
   const [summaries, setSummaries] = useState({})
@@ -37,23 +36,6 @@ function PapersTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved })
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ title: '', authors: '', year: '', abstract: '' })
   const [saving, setSaving] = useState(false)
-  const formDataRef = useRef(form)
-  useEffect(() => { formDataRef.current = form }, [form])
-
-  const doSave = async () => {
-    const f = formDataRef.current
-    if (!f.title.trim()) throw new Error('Title required')
-    await api.createPaper(projectId, { ...f, year: f.year ? Number(f.year) : undefined })
-    setForm({ title: '', authors: '', year: '', abstract: '' })
-    setShowForm(false)
-    loadPapers()
-  }
-
-  const doReset = () => {
-    setForm({ title: '', authors: '', year: '', abstract: '' })
-    setShowForm(false)
-    onFormClose?.()
-  }
 
   const loadPapers = () => {
     if (!projectId) return
@@ -66,16 +48,13 @@ function PapersTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved })
     e.preventDefault()
     if (!form.title.trim()) return
     setSaving(true)
-    onStartSave?.()
     try {
       await api.createPaper(projectId, { ...form, year: form.year ? Number(form.year) : undefined })
       setForm({ title: '', authors: '', year: '', abstract: '' })
       setShowForm(false)
       loadPapers()
-      onSaved?.()
     } catch (err) {
       console.error(err)
-      onFormClose?.()
     } finally {
       setSaving(false)
     }
@@ -99,7 +78,7 @@ function PapersTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved })
     <div>
       <div className="flex justify-end mb-4">
         <button
-          onClick={() => { setShowForm(true); onFormOpen?.(doSave, doReset) }}
+          onClick={() => setShowForm((v) => !v)}
           className="bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           + Add Paper
@@ -129,7 +108,7 @@ function PapersTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved })
               className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
           <div className="md:col-span-2 flex gap-3">
-            <button type="button" onClick={() => { setShowForm(false); onFormClose?.() }} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
             <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Saving...' : 'Save Paper'}
             </button>
@@ -169,29 +148,12 @@ function PapersTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved })
   )
 }
 
-function ExperimentsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved }) {
+function ExperimentsTab({ projectId }) {
   const [experiments, setExperiments] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', hypothesis: '', status: 'Pending' })
   const [saving, setSaving] = useState(false)
-  const formDataRef = useRef(form)
-  useEffect(() => { formDataRef.current = form }, [form])
-
-  const doSave = async () => {
-    const f = formDataRef.current
-    if (!f.name.trim()) throw new Error('Name required')
-    await api.createExperiment(projectId, f)
-    setForm({ name: '', hypothesis: '', status: 'Pending' })
-    setShowForm(false)
-    loadExperiments()
-  }
-
-  const doReset = () => {
-    setForm({ name: '', hypothesis: '', status: 'Pending' })
-    setShowForm(false)
-    onFormClose?.()
-  }
 
   const loadExperiments = () => {
     if (!projectId) return
@@ -204,16 +166,13 @@ function ExperimentsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSav
     e.preventDefault()
     if (!form.name.trim()) return
     setSaving(true)
-    onStartSave?.()
     try {
       await api.createExperiment(projectId, form)
       setForm({ name: '', hypothesis: '', status: 'Pending' })
       setShowForm(false)
       loadExperiments()
-      onSaved?.()
     } catch (err) {
       console.error(err)
-      onFormClose?.()
     } finally {
       setSaving(false)
     }
@@ -224,7 +183,7 @@ function ExperimentsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSav
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <button onClick={() => { setShowForm(true); onFormOpen?.(doSave, doReset) }}
+        <button onClick={() => setShowForm((v) => !v)}
           className="bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           + Add Experiment
         </button>
@@ -252,7 +211,7 @@ function ExperimentsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSav
               className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
           <div className="flex gap-3">
-            <button type="button" onClick={() => { setShowForm(false); onFormClose?.() }} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
             <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Saving...' : 'Save Experiment'}
             </button>
@@ -295,29 +254,12 @@ function ExperimentsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSav
   )
 }
 
-function InsightsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved }) {
+function InsightsTab({ projectId }) {
   const [insights, setInsights] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ title: '', content: '' })
   const [saving, setSaving] = useState(false)
-  const formDataRef = useRef(form)
-  useEffect(() => { formDataRef.current = form }, [form])
-
-  const doSave = async () => {
-    const f = formDataRef.current
-    if (!f.title.trim()) throw new Error('Title required')
-    await api.createInsight(projectId, f)
-    setForm({ title: '', content: '' })
-    setShowForm(false)
-    loadInsights()
-  }
-
-  const doReset = () => {
-    setForm({ title: '', content: '' })
-    setShowForm(false)
-    onFormClose?.()
-  }
 
   const loadInsights = () => {
     if (!projectId) return
@@ -330,16 +272,13 @@ function InsightsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved 
     e.preventDefault()
     if (!form.title.trim()) return
     setSaving(true)
-    onStartSave?.()
     try {
       await api.createInsight(projectId, form)
       setForm({ title: '', content: '' })
       setShowForm(false)
       loadInsights()
-      onSaved?.()
     } catch (err) {
       console.error(err)
-      onFormClose?.()
     } finally {
       setSaving(false)
     }
@@ -350,7 +289,7 @@ function InsightsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved 
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <button onClick={() => { setShowForm(true); onFormOpen?.(doSave, doReset) }}
+        <button onClick={() => setShowForm((v) => !v)}
           className="bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           + Add Insight
         </button>
@@ -369,7 +308,7 @@ function InsightsTab({ projectId, onFormOpen, onFormClose, onStartSave, onSaved 
               className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
           <div className="flex gap-3">
-            <button type="button" onClick={() => { setShowForm(false); onFormClose?.() }} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
             <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Saving...' : 'Save Insight'}
             </button>
@@ -453,48 +392,6 @@ export default function ProjectWorkspace() {
   const [project, setProject] = useState(null)
   const [allProjects, setAllProjects] = useState([])
 
-  // ── ToastSave orchestration ─────────────────────────────────
-  const [toastState, setToastState] = useState(null) // null | 'initial' | 'loading' | 'success'
-  const toastActions = useRef({ submit: null, reset: null })
-
-  const handleFormOpen = (submitFn, resetFn) => {
-    toastActions.current = { submit: submitFn, reset: resetFn }
-    setToastState('initial')
-  }
-
-  const closeToast = () => {
-    setToastState(null)
-    toastActions.current = { submit: null, reset: null }
-  }
-
-  // Called when the FORM'S own submit button fires (before API)
-  const handleStartSave = () => setToastState('loading')
-
-  // Called when the FORM'S own submit succeeds
-  const handleSaved = () => {
-    setToastState('success')
-    setTimeout(closeToast, 2000)
-  }
-
-  // Called by the TOAST'S Save button
-  const handleToastSave = async () => {
-    if (!toastActions.current.submit) return
-    setToastState('loading')
-    try {
-      await toastActions.current.submit()
-      setToastState('success')
-      setTimeout(closeToast, 2000)
-    } catch {
-      closeToast()
-    }
-  }
-
-  // Called by the TOAST'S Reset button
-  const handleToastReset = () => {
-    toastActions.current.reset?.()
-    closeToast()
-  }
-
   useEffect(() => {
     api.getProjects().then(setAllProjects).catch(console.error)
   }, [])
@@ -550,45 +447,10 @@ export default function ProjectWorkspace() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 0 && (
-        <PapersTab
-          projectId={id}
-          onFormOpen={handleFormOpen}
-          onFormClose={closeToast}
-          onStartSave={handleStartSave}
-          onSaved={handleSaved}
-        />
-      )}
-      {activeTab === 1 && (
-        <ExperimentsTab
-          projectId={id}
-          onFormOpen={handleFormOpen}
-          onFormClose={closeToast}
-          onStartSave={handleStartSave}
-          onSaved={handleSaved}
-        />
-      )}
-      {activeTab === 2 && (
-        <InsightsTab
-          projectId={id}
-          onFormOpen={handleFormOpen}
-          onFormClose={closeToast}
-          onStartSave={handleStartSave}
-          onSaved={handleSaved}
-        />
-      )}
+      {activeTab === 0 && <PapersTab projectId={id} />}
+      {activeTab === 1 && <ExperimentsTab projectId={id} />}
+      {activeTab === 2 && <InsightsTab projectId={id} />}
       {activeTab === 3 && <WorkflowTab projectId={id} />}
-
-      {/* Floating save toast */}
-      {toastState && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <ToastSave
-            state={toastState}
-            onSave={handleToastSave}
-            onReset={handleToastReset}
-          />
-        </div>
-      )}
     </div>
   )
 }

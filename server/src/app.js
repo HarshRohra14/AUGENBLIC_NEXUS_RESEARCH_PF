@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 
 const authRoutes = require('./routes/auth');
+const oauthRoutes = require('./routes/oauth');
 const projectRoutes = require('./routes/projects');
 const paperRoutes = require('./routes/papers');
 const experimentRoutes = require('./routes/experiments');
@@ -15,7 +16,10 @@ const app = express();
 
 // CORS
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:5173',
+    'http://localhost:5173',
+  ],
   credentials: true,
 }));
 
@@ -28,6 +32,7 @@ app.use('/uploads', express.static(path.resolve(uploadDir)));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/auth', oauthRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/papers', paperRoutes);
 app.use('/api/experiments', experimentRoutes);

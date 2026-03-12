@@ -26,13 +26,20 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  const loginWithToken = async (token) => {
+    localStorage.setItem('nexus_token', token)
+    const u = await api.me()
+    setUser(u)
+    return u
+  }
+
   const logout = () => {
     localStorage.removeItem('nexus_token')
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithToken, logout }}>
       {children}
     </AuthContext.Provider>
   )
