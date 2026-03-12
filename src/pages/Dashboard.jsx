@@ -104,7 +104,7 @@ export default function Dashboard() {
     { label: 'Experiments', value: stats.experiments, icon: '🔬' },
   ]
 
-  const firstName = user?.name ? user.name.split(' ')[0] : 'Researcher'
+  const firstName = user?.name?.trim() ? user.name.trim().split(' ')[0] : (user?.email?.split('@')[0] || 'Researcher')
 
   return (
     <div className="p-8">
