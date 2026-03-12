@@ -6,6 +6,7 @@ const navItems = [
   { to: '/graph', icon: '🕸️', label: 'Knowledge Graph' },
   { to: '/assistant', icon: '🤖', label: 'AI Assistant' },
   { to: '/similarity', icon: '🔍', label: 'Similarity Check' },
+  { to: '/', icon: '🚀', label: 'About Nexus' },
 ]
 
 export default function Sidebar() {
