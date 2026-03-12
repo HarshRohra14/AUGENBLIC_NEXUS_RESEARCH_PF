@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 
@@ -15,13 +15,77 @@ const tagColors = {
   'Edge AI': 'bg-red-500/20 text-red-300',
 }
 
+function NewProjectModal({ onClose, onCreate }) {
+  const [form, setForm] = useState({ name: '', description: '' })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.name.trim()) return
+    setSaving(true)
+    setError(null)
+    try {
+      const project = await api.createProject({ name: form.name, description: form.description })
+      onCreate(project)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-[#1A2B3C] rounded-2xl p-8 w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-bold text-white mb-6">New Project</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-xs text-gray-400 mb-1.5 block">Project Name *</label>
+            <input
+              type="text"
+              placeholder="e.g. Transformer Efficiency Study"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+              autoFocus
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1.5 block">Description</label>
+            <textarea
+              placeholder="What is this project about?"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={3}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none placeholder:text-gray-600"
+            />
+          </div>
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-xl text-sm transition-colors">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving} className="flex-1 bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+              {saving ? 'Creating...' : 'Create Project'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [projects, setProjects] = useState([])
   const [stats, setStats] = useState({ projects: 0, papers: 0, insights: 0, experiments: 0 })
   const [loading, setLoading] = useState(true)
+  const [showNewProject, setShowNewProject] = useState(false)
 
-  useEffect(() => {
+  const loadProjects = () => {
     api.getProjects()
       .then((data) => {
         setProjects(data)
@@ -29,7 +93,9 @@ export default function Dashboard() {
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { loadProjects() }, [])
 
   const displayStats = [
     { label: 'Projects', value: stats.projects, icon: '📁' },
@@ -42,18 +108,28 @@ export default function Dashboard() {
 
   return (
     <div className="p-8">
+      {showNewProject && (
+        <NewProjectModal
+          onClose={() => setShowNewProject(false)}
+          onCreate={(project) => {
+            setShowNewProject(false)
+            navigate(`/project/${project.id}`)
+          }}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-gray-400 text-sm mt-1">Welcome back, {firstName}</p>
         </div>
-        <Link
-          to="/project/new"
+        <button
+          onClick={() => setShowNewProject(true)}
           className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
         >
           + New Project
-        </Link>
+        </button>
       </div>
 
       {/* Stats Bar */}
@@ -83,7 +159,15 @@ export default function Dashboard() {
             <div className="flex items-center justify-center h-40 text-gray-500 text-sm">Loading projects...</div>
           ) : projects.length === 0 ? (
             <div className="bg-[#1A2B3C] rounded-xl p-10 border border-white/5 text-center">
-              <p className="text-gray-400 text-sm mb-4">No projects yet</p>
+              <p className="text-4xl mb-4">📁</p>
+              <p className="text-gray-300 font-medium mb-1">No projects yet</p>
+              <p className="text-gray-500 text-sm mb-5">Create your first research project to get started</p>
+              <button
+                onClick={() => setShowNewProject(true)}
+                className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+              >
+                + Create First Project
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

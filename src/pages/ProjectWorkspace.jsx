@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 
 const tagColors = {
@@ -33,26 +33,39 @@ function PapersTab({ projectId }) {
   const [loading, setLoading] = useState(true)
   const [summaries, setSummaries] = useState({})
   const [summarizing, setSummarizing] = useState({})
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ title: '', authors: '', year: '', abstract: '' })
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
+  const loadPapers = () => {
     if (!projectId) return
-    api.getPapers(projectId)
-      .then(setPapers)
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [projectId])
+    api.getPapers(projectId).then(setPapers).catch(console.error).finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadPapers() }, [projectId])
+
+  const handleAdd = async (e) => {
+    e.preventDefault()
+    if (!form.title.trim()) return
+    setSaving(true)
+    try {
+      await api.createPaper(projectId, { ...form, year: form.year ? Number(form.year) : undefined })
+      setForm({ title: '', authors: '', year: '', abstract: '' })
+      setShowForm(false)
+      loadPapers()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleSummarize = async (paperId, abstract) => {
     setSummarizing((s) => ({ ...s, [paperId]: true }))
     try {
-      let result
-      if (abstract) {
-        result = await api.aiSummarize(abstract)
-      } else {
-        result = await api.summarizePaper(paperId)
-      }
+      const result = abstract ? await api.aiSummarize(abstract) : await api.summarizePaper(paperId)
       setSummaries((s) => ({ ...s, [paperId]: result.summary || result }))
-    } catch (err) {
+    } catch {
       setSummaries((s) => ({ ...s, [paperId]: 'Summary unavailable.' }))
     } finally {
       setSummarizing((s) => ({ ...s, [paperId]: false }))
@@ -60,44 +73,77 @@ function PapersTab({ projectId }) {
   }
 
   if (loading) return <div className="text-gray-500 text-sm py-10 text-center">Loading papers...</div>
-  if (papers.length === 0) return <div className="text-gray-500 text-sm py-10 text-center">No papers yet.</div>
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      {papers.map((paper) => (
-        <div
-          key={paper.id}
-          className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5 hover:border-[#00B4D8]/30 transition-all duration-300"
+    <div>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
-          <h3 className="font-semibold text-white text-sm mb-1">{paper.title}</h3>
-          <p className="text-xs text-[#00B4D8] mb-2">
-            {paper.authors} {paper.year ? `· ${paper.year}` : ''}
-          </p>
-          <p className="text-xs text-gray-400 mb-4 line-clamp-3">{paper.abstract}</p>
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {(paper.tags || []).map((tag) => (
-              <span
-                key={tag}
-                className={`text-[10px] px-2 py-0.5 rounded-full ${tagColors[tag] || 'bg-gray-500/20 text-gray-300'}`}
-              >
-                {tag}
-              </span>
-            ))}
+          + Add Paper
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleAdd} className="bg-[#1A2B3C] rounded-xl p-6 border border-[#00B4D8]/20 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="text-xs text-gray-400 mb-1 block">Title *</label>
+            <input type="text" required placeholder="Paper title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
           </div>
-          {summaries[paper.id] && (
-            <div className="bg-[#0D1B2A] rounded-lg p-3 mb-3 text-xs text-gray-300 leading-relaxed">
-              {summaries[paper.id]}
-            </div>
-          )}
-          <button
-            onClick={() => handleSummarize(paper.id, paper.abstract)}
-            disabled={summarizing[paper.id]}
-            className="text-xs bg-[#00B4D8]/10 text-[#00B4D8] hover:bg-[#00B4D8]/20 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            {summarizing[paper.id] ? '⏳ Summarizing...' : '✨ AI Summary'}
-          </button>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Authors</label>
+            <input type="text" placeholder="e.g. Smith et al." value={form.authors} onChange={(e) => setForm({ ...form, authors: e.target.value })}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Year</label>
+            <input type="number" placeholder="2024" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs text-gray-400 mb-1 block">Abstract</label>
+            <textarea placeholder="Paper abstract..." value={form.abstract} onChange={(e) => setForm({ ...form, abstract: e.target.value })} rows={3}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none placeholder:text-gray-600" />
+          </div>
+          <div className="md:col-span-2 flex gap-3">
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
+            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+              {saving ? 'Saving...' : 'Save Paper'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {papers.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          <p className="text-3xl mb-3">📄</p>
+          <p className="text-sm">No papers yet. Click <strong className="text-gray-300">+ Add Paper</strong> to add your first one.</p>
         </div>
-      ))}
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {papers.map((paper) => (
+            <div key={paper.id} className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5 hover:border-[#00B4D8]/30 transition-all duration-300">
+              <h3 className="font-semibold text-white text-sm mb-1">{paper.title}</h3>
+              <p className="text-xs text-[#00B4D8] mb-2">{paper.authors} {paper.year ? `· ${paper.year}` : ''}</p>
+              <p className="text-xs text-gray-400 mb-4 line-clamp-3">{paper.abstract}</p>
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {(paper.tags || []).map((tag) => (
+                  <span key={tag} className={`text-[10px] px-2 py-0.5 rounded-full ${tagColors[tag] || 'bg-gray-500/20 text-gray-300'}`}>{tag}</span>
+                ))}
+              </div>
+              {summaries[paper.id] && (
+                <div className="bg-[#0D1B2A] rounded-lg p-3 mb-3 text-xs text-gray-300 leading-relaxed">{summaries[paper.id]}</div>
+              )}
+              <button onClick={() => handleSummarize(paper.id, paper.abstract)} disabled={summarizing[paper.id]}
+                className="text-xs bg-[#00B4D8]/10 text-[#00B4D8] hover:bg-[#00B4D8]/20 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors">
+                {summarizing[paper.id] ? '⏳ Summarizing...' : '✨ AI Summary'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -105,48 +151,105 @@ function PapersTab({ projectId }) {
 function ExperimentsTab({ projectId }) {
   const [experiments, setExperiments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ name: '', hypothesis: '', status: 'Pending' })
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
+  const loadExperiments = () => {
     if (!projectId) return
-    api.getExperiments(projectId)
-      .then(setExperiments)
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [projectId])
+    api.getExperiments(projectId).then(setExperiments).catch(console.error).finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadExperiments() }, [projectId])
+
+  const handleAdd = async (e) => {
+    e.preventDefault()
+    if (!form.name.trim()) return
+    setSaving(true)
+    try {
+      await api.createExperiment(projectId, form)
+      setForm({ name: '', hypothesis: '', status: 'Pending' })
+      setShowForm(false)
+      loadExperiments()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (loading) return <div className="text-gray-500 text-sm py-10 text-center">Loading experiments...</div>
-  if (experiments.length === 0) return <div className="text-gray-500 text-sm py-10 text-center">No experiments yet.</div>
 
   return (
-    <div className="bg-[#1A2B3C] rounded-xl border border-white/5 overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-white/5">
-            <th className="text-left px-5 py-3 text-gray-400 font-medium text-xs">Name</th>
-            <th className="text-left px-5 py-3 text-gray-400 font-medium text-xs">Status</th>
-            <th className="text-left px-5 py-3 text-gray-400 font-medium text-xs hidden md:table-cell">Hypothesis</th>
-            <th className="text-left px-5 py-3 text-gray-400 font-medium text-xs">Date</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-white/5">
-          {experiments.map((exp) => (
-            <tr key={exp.id} className="hover:bg-white/2 transition-colors">
-              <td className="px-5 py-4 text-white font-medium">{exp.name}</td>
-              <td className="px-5 py-4">
-                <span className={`text-xs px-2.5 py-1 rounded-full ${statusColors[exp.status] || 'bg-gray-500/20 text-gray-300'}`}>
-                  {exp.status}
-                </span>
-              </td>
-              <td className="px-5 py-4 text-gray-400 text-xs hidden md:table-cell max-w-xs truncate">
-                {exp.hypothesis}
-              </td>
-              <td className="px-5 py-4 text-gray-500 text-xs">
-                {exp.createdAt ? new Date(exp.createdAt).toLocaleDateString() : '—'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div>
+      <div className="flex justify-end mb-4">
+        <button onClick={() => setShowForm((v) => !v)}
+          className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          + Add Experiment
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleAdd} className="bg-[#1A2B3C] rounded-xl p-6 border border-[#00B4D8]/20 mb-6 space-y-4">
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Name *</label>
+            <input type="text" required placeholder="Experiment name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Status</label>
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:outline-none">
+              <option>Pending</option>
+              <option>Active</option>
+              <option>Completed</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Hypothesis</label>
+            <textarea placeholder="Your hypothesis..." value={form.hypothesis} onChange={(e) => setForm({ ...form, hypothesis: e.target.value })} rows={2}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none placeholder:text-gray-600" />
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
+            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+              {saving ? 'Saving...' : 'Save Experiment'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {experiments.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          <p className="text-3xl mb-3">🔬</p>
+          <p className="text-sm">No experiments yet. Click <strong className="text-gray-300">+ Add Experiment</strong> to get started.</p>
+        </div>
+      ) : (
+        <div className="bg-[#1A2B3C] rounded-xl border border-white/5 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/5">
+                <th className="text-left px-5 py-3 text-gray-400 font-medium text-xs">Name</th>
+                <th className="text-left px-5 py-3 text-gray-400 font-medium text-xs">Status</th>
+                <th className="text-left px-5 py-3 text-gray-400 font-medium text-xs hidden md:table-cell">Hypothesis</th>
+                <th className="text-left px-5 py-3 text-gray-400 font-medium text-xs">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {experiments.map((exp) => (
+                <tr key={exp.id} className="hover:bg-white/2 transition-colors">
+                  <td className="px-5 py-4 text-white font-medium">{exp.name}</td>
+                  <td className="px-5 py-4">
+                    <span className={`text-xs px-2.5 py-1 rounded-full ${statusColors[exp.status] || 'bg-gray-500/20 text-gray-300'}`}>{exp.status}</span>
+                  </td>
+                  <td className="px-5 py-4 text-gray-400 text-xs hidden md:table-cell max-w-xs truncate">{exp.hypothesis}</td>
+                  <td className="px-5 py-4 text-gray-500 text-xs">{exp.createdAt ? new Date(exp.createdAt).toLocaleDateString() : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
@@ -154,34 +257,81 @@ function ExperimentsTab({ projectId }) {
 function InsightsTab({ projectId }) {
   const [insights, setInsights] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ title: '', content: '' })
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
+  const loadInsights = () => {
     if (!projectId) return
-    api.getInsights(projectId)
-      .then(setInsights)
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [projectId])
+    api.getInsights(projectId).then(setInsights).catch(console.error).finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadInsights() }, [projectId])
+
+  const handleAdd = async (e) => {
+    e.preventDefault()
+    if (!form.title.trim()) return
+    setSaving(true)
+    try {
+      await api.createInsight(projectId, form)
+      setForm({ title: '', content: '' })
+      setShowForm(false)
+      loadInsights()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (loading) return <div className="text-gray-500 text-sm py-10 text-center">Loading insights...</div>
-  if (insights.length === 0) return <div className="text-gray-500 text-sm py-10 text-center">No insights yet.</div>
 
   return (
-    <div className="space-y-4">
-      {insights.map((insight) => (
-        <div
-          key={insight.id}
-          className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5 hover:border-[#00B4D8]/30 transition-all duration-300 flex items-start justify-between gap-4"
-        >
-          <div className="flex-1">
-            <h3 className="font-semibold text-white text-sm mb-1">💡 {insight.title}</h3>
-            <p className="text-xs text-gray-400 mb-3">{insight.content}</p>
-            <span className="text-[10px] text-gray-500">
-              {insight._count?.linkedPapers || 0} linked papers
-            </span>
+    <div>
+      <div className="flex justify-end mb-4">
+        <button onClick={() => setShowForm((v) => !v)}
+          className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          + Add Insight
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleAdd} className="bg-[#1A2B3C] rounded-xl p-6 border border-[#00B4D8]/20 mb-6 space-y-4">
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Title *</label>
+            <input type="text" required placeholder="Insight title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
           </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Content</label>
+            <textarea placeholder="Describe this insight..." value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={3}
+              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none placeholder:text-gray-600" />
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
+            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+              {saving ? 'Saving...' : 'Save Insight'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {insights.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          <p className="text-3xl mb-3">💡</p>
+          <p className="text-sm">No insights yet. Click <strong className="text-gray-300">+ Add Insight</strong> to record your first finding.</p>
         </div>
-      ))}
+      ) : (
+        <div className="space-y-4">
+          {insights.map((insight) => (
+            <div key={insight.id} className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5 hover:border-[#00B4D8]/30 transition-all duration-300">
+              <h3 className="font-semibold text-white text-sm mb-1">💡 {insight.title}</h3>
+              <p className="text-xs text-gray-400 mb-3">{insight.content}</p>
+              <span className="text-[10px] text-gray-500">{insight._count?.linkedPapers || 0} linked papers</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -234,11 +384,17 @@ function WorkflowTab({ projectId }) {
 
 export default function ProjectWorkspace() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const initialTab = tabParam ? tabs.findIndex(t => t.toLowerCase() === tabParam.toLowerCase()) : 0
   const [activeTab, setActiveTab] = useState(initialTab >= 0 ? initialTab : 0)
   const [project, setProject] = useState(null)
+  const [allProjects, setAllProjects] = useState([])
+
+  useEffect(() => {
+    api.getProjects().then(setAllProjects).catch(console.error)
+  }, [])
 
   useEffect(() => {
     if (id && id !== 'new') {
@@ -248,6 +404,25 @@ export default function ProjectWorkspace() {
 
   return (
     <div className="p-8">
+      {/* Project Picker bar */}
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate('/dashboard')} className="text-gray-500 hover:text-white text-sm transition-colors">← Projects</button>
+        {allProjects.length > 1 && (
+          <>
+            <span className="text-gray-600">/</span>
+            <select
+              value={id || ''}
+              onChange={(e) => navigate(`/project/${e.target.value}`)}
+              className="bg-[#1A2B3C] text-white text-sm rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
+            >
+              {allProjects.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </>
+        )}
+      </div>
+
       {/* Project Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white mb-2">{project?.name || 'Project Workspace'}</h1>

@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const navItems = [
-  { to: '/dashboard', icon: '🏠', label: 'Dashboard' },
+  { to: '/dashboard', icon: '🏠', label: 'Dashboard & Projects' },
   { to: '/graph', icon: '🕸️', label: 'Knowledge Graph' },
   { to: '/assistant', icon: '🤖', label: 'AI Assistant' },
   { to: '/similarity', icon: '🔍', label: 'Similarity Check' },
