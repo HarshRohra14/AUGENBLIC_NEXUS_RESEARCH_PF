@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
 
 const typeColors = {
-  paper: { bg: 'bg-[#1A6FBF]', border: 'border-[#1A6FBF]', text: 'text-[#1A6FBF]' },
-  insight: { bg: 'bg-[#00B4D8]', border: 'border-[#00B4D8]', text: 'text-[#00B4D8]' },
+  paper: { bg: 'bg-[#7C3AED]', border: 'border-[#7C3AED]', text: 'text-[#7C3AED]' },
+  insight: { bg: 'bg-[#A855F7]', border: 'border-[#A855F7]', text: 'text-[#A855F7]' },
   experiment: { bg: 'bg-emerald-500', border: 'border-emerald-500', text: 'text-emerald-400' },
 }
 
@@ -138,7 +138,7 @@ export default function InsightGraph() {
             <select
               value={selectedProject || ''}
               onChange={(e) => setSelectedProject(e.target.value)}
-              className="bg-[#1A2B3C] text-white text-xs rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
+              className="bg-[#150825] text-white text-xs rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
             >
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -152,8 +152,8 @@ export default function InsightGraph() {
               onClick={() => setActiveFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                 activeFilter === f
-                  ? 'bg-[#00B4D8] text-white'
-                  : 'bg-[#1A2B3C] text-gray-400 hover:text-white hover:bg-white/10'
+                  ? 'bg-[#A855F7] text-white'
+                  : 'bg-[#150825] text-gray-400 hover:text-white hover:bg-white/10'
               }`}
             >
               {f}
@@ -167,7 +167,7 @@ export default function InsightGraph() {
           <div
             className="absolute inset-0 opacity-5"
             style={{
-              backgroundImage: 'radial-gradient(circle, #00B4D8 1px, transparent 1px)',
+              backgroundImage: 'radial-gradient(circle, #A855F7 1px, transparent 1px)',
               backgroundSize: '40px 40px',
             }}
           />
@@ -197,7 +197,7 @@ export default function InsightGraph() {
                   y1={a.y}
                   x2={b.x}
                   y2={b.y}
-                  stroke="#00B4D8"
+                  stroke="#A855F7"
                   strokeOpacity={0.15}
                   strokeWidth={1.5}
                 />
@@ -218,7 +218,7 @@ export default function InsightGraph() {
               >
                 <div
                   className={`w-16 h-16 rounded-full ${colors.bg} flex items-center justify-center text-white text-xs font-bold border-2 ${
-                    isSelected ? 'border-white scale-110 shadow-lg shadow-[#00B4D8]/30' : `${colors.border}/50 group-hover:scale-110`
+                    isSelected ? 'border-white scale-110 shadow-lg shadow-[#A855F7]/30' : `${colors.border}/50 group-hover:scale-110`
                   } transition-all duration-200`}
                 >
                   {node.label.split(' ').map((w) => w[0]).join('').slice(0, 3)}
@@ -237,7 +237,7 @@ export default function InsightGraph() {
       </div>
 
       {/* Details Panel */}
-      <div className="w-80 bg-[#1A2B3C] border-l border-white/5 p-6 overflow-y-auto shrink-0">
+      <div className="w-80 bg-[#150825] border-l border-white/5 p-6 overflow-y-auto shrink-0">
         {detail ? (
           <>
             <div className="flex items-center gap-2 mb-4">
@@ -258,7 +258,7 @@ export default function InsightGraph() {
                   {detail.papers.map((p, i) => (
                     <div
                       key={i}
-                      className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
+                      className="bg-[#0A000F] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
                     >
                       📄 {typeof p === 'string' ? p : p.title || p}
                     </div>
@@ -276,7 +276,7 @@ export default function InsightGraph() {
                   {detail.insights.map((ins, i) => (
                     <div
                       key={i}
-                      className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
+                      className="bg-[#0A000F] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
                     >
                       💡 {typeof ins === 'string' ? ins : ins.title || ins}
                     </div>

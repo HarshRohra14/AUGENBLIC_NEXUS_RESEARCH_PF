@@ -76,7 +76,7 @@ export default function AIAssistant() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#00B4D8] to-[#1A6FBF] flex items-center justify-center text-sm">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#A855F7] to-[#7C3AED] flex items-center justify-center text-sm">
             🤖
           </div>
           <div className="flex-1">
@@ -89,7 +89,7 @@ export default function AIAssistant() {
             <select
               value={selectedProject?.id || ''}
               onChange={(e) => setSelectedProject(projects.find((p) => p.id === e.target.value) || null)}
-              className="bg-[#0D1B2A] text-white text-xs rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
+              className="bg-[#0A000F] text-white text-xs rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
             >
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -103,8 +103,8 @@ export default function AIAssistant() {
               <div
                 className={`max-w-[70%] rounded-2xl px-5 py-3 text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-[#1A6FBF] text-white rounded-br-md'
-                    : 'bg-[#1A2B3C] text-gray-300 rounded-bl-md border border-white/5'
+                    ? 'bg-[#7C3AED] text-white rounded-br-md'
+                    : 'bg-[#150825] text-gray-300 rounded-bl-md border border-white/5'
                 }`}
               >
                 <div className="whitespace-pre-line">{msg.text}</div>
@@ -113,11 +113,11 @@ export default function AIAssistant() {
           ))}
           {sending && (
             <div className="flex justify-start">
-              <div className="bg-[#1A2B3C] border border-white/5 rounded-2xl rounded-bl-md px-5 py-3">
+              <div className="bg-[#150825] border border-white/5 rounded-2xl rounded-bl-md px-5 py-3">
                 <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-[#00B4D8] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-[#00B4D8] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-[#00B4D8] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-2 h-2 bg-[#A855F7] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-[#A855F7] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-[#A855F7] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             </div>
@@ -132,7 +132,7 @@ export default function AIAssistant() {
               key={action}
               onClick={() => handleQuickAction(action)}
               disabled={sending}
-              className="text-xs bg-[#1A2B3C] text-[#00B4D8] hover:bg-[#00B4D8]/10 disabled:opacity-50 px-3 py-1.5 rounded-lg border border-[#00B4D8]/20 transition-colors"
+              className="text-xs bg-[#150825] text-[#A855F7] hover:bg-[#A855F7]/10 disabled:opacity-50 px-3 py-1.5 rounded-lg border border-[#A855F7]/20 transition-colors"
             >
               {action}
             </button>
@@ -149,12 +149,12 @@ export default function AIAssistant() {
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               disabled={sending}
               placeholder="Ask Nexus AI about your research..."
-              className="flex-1 bg-[#1A2B3C] text-white text-sm rounded-xl px-5 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none transition-colors placeholder:text-gray-500 disabled:opacity-50"
+              className="flex-1 bg-[#150825] text-white text-sm rounded-xl px-5 py-3 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none transition-colors placeholder:text-gray-500 disabled:opacity-50"
             />
             <button
               onClick={handleSend}
               disabled={sending || !input.trim()}
-              className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors"
+              className="bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors"
             >
               Send
             </button>
@@ -163,16 +163,16 @@ export default function AIAssistant() {
       </div>
 
       {/* Context Panel */}
-      <div className="w-80 bg-[#1A2B3C] border-l border-white/5 p-6 overflow-y-auto shrink-0">
+      <div className="w-80 bg-[#150825] border-l border-white/5 p-6 overflow-y-auto shrink-0">
         <h2 className="text-sm font-semibold text-white mb-4">Active Project Context</h2>
 
         {selectedProject ? (
-          <div className="bg-[#0D1B2A] rounded-xl p-4 border border-white/5 mb-6">
-            <h3 className="text-sm font-medium text-[#00B4D8] mb-1">{selectedProject.name}</h3>
+          <div className="bg-[#0A000F] rounded-xl p-4 border border-white/5 mb-6">
+            <h3 className="text-sm font-medium text-[#A855F7] mb-1">{selectedProject.name}</h3>
             <p className="text-xs text-gray-400 line-clamp-3">{selectedProject.description}</p>
           </div>
         ) : (
-          <div className="bg-[#0D1B2A] rounded-xl p-4 border border-white/5 mb-6">
+          <div className="bg-[#0A000F] rounded-xl p-4 border border-white/5 mb-6">
             <p className="text-xs text-gray-500">No project selected</p>
           </div>
         )}
@@ -189,7 +189,7 @@ export default function AIAssistant() {
           ].map((tip) => (
             <div
               key={tip}
-              className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-400 border border-white/5"
+              className="bg-[#0A000F] rounded-lg px-3 py-2 text-xs text-gray-400 border border-white/5"
             >
               💡 {tip}
             </div>

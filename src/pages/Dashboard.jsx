@@ -37,7 +37,7 @@ function NewProjectModal({ onClose, onCreate }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-[#1A2B3C] rounded-2xl p-8 w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-[#150825] rounded-2xl p-8 w-full max-w-md border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-6">New Project</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -49,7 +49,7 @@ function NewProjectModal({ onClose, onCreate }) {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
               autoFocus
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600"
+              className="w-full bg-[#0A000F] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none placeholder:text-gray-600"
             />
           </div>
           <div>
@@ -59,7 +59,7 @@ function NewProjectModal({ onClose, onCreate }) {
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none placeholder:text-gray-600"
+              className="w-full bg-[#0A000F] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600"
             />
           </div>
           {error && <p className="text-red-400 text-xs">{error}</p>}
@@ -67,7 +67,7 @@ function NewProjectModal({ onClose, onCreate }) {
             <button type="button" onClick={onClose} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-2.5 rounded-xl text-sm transition-colors">
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="flex-1 bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+            <button type="submit" disabled={saving} className="flex-1 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
               {saving ? 'Creating...' : 'Create Project'}
             </button>
           </div>
@@ -126,7 +126,7 @@ export default function Dashboard() {
         </div>
         <button
           onClick={() => setShowNewProject(true)}
-          className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+          className="bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
         >
           + New Project
         </button>
@@ -137,7 +137,7 @@ export default function Dashboard() {
         {displayStats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5 hover:border-[#00B4D8]/30 transition-all duration-300"
+            className="bg-[#150825] rounded-xl p-5 border border-white/5 hover:border-[#A855F7]/30 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <span className="text-2xl">{stat.icon}</span>
@@ -158,13 +158,13 @@ export default function Dashboard() {
           {loading ? (
             <div className="flex items-center justify-center h-40 text-gray-500 text-sm">Loading projects...</div>
           ) : projects.length === 0 ? (
-            <div className="bg-[#1A2B3C] rounded-xl p-10 border border-white/5 text-center">
+            <div className="bg-[#150825] rounded-xl p-10 border border-white/5 text-center">
               <p className="text-4xl mb-4">📁</p>
               <p className="text-gray-300 font-medium mb-1">No projects yet</p>
               <p className="text-gray-500 text-sm mb-5">Create your first research project to get started</p>
               <button
                 onClick={() => setShowNewProject(true)}
-                className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                className="bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
               >
                 + Create First Project
               </button>
@@ -175,9 +175,9 @@ export default function Dashboard() {
                 <Link
                   key={project.id}
                   to={`/project/${project.id}`}
-                  className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5 hover:border-[#00B4D8]/30 hover:shadow-lg hover:shadow-[#00B4D8]/5 transition-all duration-300 group"
+                  className="bg-[#150825] rounded-xl p-5 border border-white/5 hover:border-[#A855F7]/30 hover:shadow-lg hover:shadow-[#A855F7]/5 transition-all duration-300 group"
                 >
-                  <h3 className="font-semibold text-white group-hover:text-[#00B4D8] transition-colors text-sm mb-2">
+                  <h3 className="font-semibold text-white group-hover:text-[#A855F7] transition-colors text-sm mb-2">
                     {project.name}
                   </h3>
                   <p className="text-xs text-gray-400 mb-4 line-clamp-2">{project.description}</p>
@@ -205,7 +205,7 @@ export default function Dashboard() {
         {/* Quick Actions */}
         <div>
           <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
-          <div className="bg-[#1A2B3C] rounded-xl border border-white/5 divide-y divide-white/5">
+          <div className="bg-[#150825] rounded-xl border border-white/5 divide-y divide-white/5">
             {[
               { label: '🤖 Open AI Assistant', to: '/assistant' },
               { label: '🔍 Similarity Check', to: '/similarity' },

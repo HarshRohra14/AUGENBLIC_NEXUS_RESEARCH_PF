@@ -78,7 +78,7 @@ export default function SimilarityChecker() {
             value={docA}
             onChange={(e) => { setDocA(e.target.value); setResult(null) }}
             placeholder="Paste the first document text here..."
-            className="w-full h-64 bg-[#1A2B3C] text-gray-300 text-sm rounded-xl p-5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none transition-colors placeholder:text-gray-600"
+            className="w-full h-64 bg-[#150825] text-gray-300 text-sm rounded-xl p-5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none transition-colors placeholder:text-gray-600"
           />
         </div>
         <div>
@@ -87,7 +87,7 @@ export default function SimilarityChecker() {
             value={docB}
             onChange={(e) => { setDocB(e.target.value); setResult(null) }}
             placeholder="Paste the second document text here..."
-            className="w-full h-64 bg-[#1A2B3C] text-gray-300 text-sm rounded-xl p-5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none transition-colors placeholder:text-gray-600"
+            className="w-full h-64 bg-[#150825] text-gray-300 text-sm rounded-xl p-5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none transition-colors placeholder:text-gray-600"
           />
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function SimilarityChecker() {
         <button
           onClick={handleAnalyze}
           disabled={loading}
-          className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white px-8 py-3 rounded-xl text-sm font-medium transition-colors"
+          className="bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white px-8 py-3 rounded-xl text-sm font-medium transition-colors"
         >
           {loading ? '⏳ Analyzing...' : '🔍 Analyze Similarity'}
         </button>
@@ -114,7 +114,7 @@ export default function SimilarityChecker() {
         <div className="space-y-8">
           {/* Similarity Score */}
           <div className="flex justify-center">
-            <div className="bg-[#1A2B3C] rounded-2xl p-8 border border-white/5 text-center">
+            <div className="bg-[#150825] rounded-2xl p-8 border border-white/5 text-center">
               <p className="text-sm text-gray-400 mb-2">Overall Similarity</p>
               <p className={`text-7xl font-bold ${getSimilarityColor(similarity)}`}>
                 {similarity}%
@@ -129,7 +129,7 @@ export default function SimilarityChecker() {
           {result.breakdown && (
             <div>
               <h3 className="text-sm font-semibold text-white mb-4">Similarity Breakdown</h3>
-              <div className="bg-[#1A2B3C] rounded-xl p-6 border border-white/5 space-y-4">
+              <div className="bg-[#150825] rounded-xl p-6 border border-white/5 space-y-4">
                 {[
                   { label: 'Exact Match', pct: Math.round((result.breakdown.exact || 0) * 100) },
                   { label: 'Semantic Similarity', pct: Math.round((result.breakdown.semantic || 0) * 100) },
@@ -139,7 +139,7 @@ export default function SimilarityChecker() {
                       <span className="text-gray-400">{cat.label}</span>
                       <span className="text-gray-300 font-medium">{cat.pct}%</span>
                     </div>
-                    <div className="h-2.5 bg-[#0D1B2A] rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-[#0A000F] rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-700 ${cat.pct >= 75 ? 'bg-red-400' : cat.pct >= 50 ? 'bg-yellow-400' : 'bg-green-400'}`}
                         style={{ width: `${cat.pct}%` }}
@@ -158,13 +158,13 @@ export default function SimilarityChecker() {
                 Matching Passages ({matchingPhrases.length} found)
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5">
+                <div className="bg-[#150825] rounded-xl p-5 border border-white/5">
                   <p className="text-xs text-gray-500 mb-3 font-medium">Document A</p>
                   <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
                     {highlightText(docA, matchingPhrases)}
                   </p>
                 </div>
-                <div className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5">
+                <div className="bg-[#150825] rounded-xl p-5 border border-white/5">
                   <p className="text-xs text-gray-500 mb-3 font-medium">Document B</p>
                   <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
                     {highlightText(docB, matchingPhrases)}

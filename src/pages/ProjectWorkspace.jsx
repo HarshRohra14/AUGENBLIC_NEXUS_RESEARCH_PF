@@ -79,37 +79,37 @@ function PapersTab({ projectId }) {
       <div className="flex justify-end mb-4">
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           + Add Paper
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-[#1A2B3C] rounded-xl p-6 border border-[#00B4D8]/20 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleAdd} className="bg-[#150825] rounded-xl p-6 border border-[#A855F7]/20 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="text-xs text-gray-400 mb-1 block">Title *</label>
             <input type="text" required placeholder="Paper title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none placeholder:text-gray-600" />
           </div>
           <div>
             <label className="text-xs text-gray-400 mb-1 block">Authors</label>
             <input type="text" placeholder="e.g. Smith et al." value={form.authors} onChange={(e) => setForm({ ...form, authors: e.target.value })}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none placeholder:text-gray-600" />
           </div>
           <div>
             <label className="text-xs text-gray-400 mb-1 block">Year</label>
             <input type="number" placeholder="2024" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none placeholder:text-gray-600" />
           </div>
           <div className="md:col-span-2">
             <label className="text-xs text-gray-400 mb-1 block">Abstract</label>
             <textarea placeholder="Paper abstract..." value={form.abstract} onChange={(e) => setForm({ ...form, abstract: e.target.value })} rows={3}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none placeholder:text-gray-600" />
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
           <div className="md:col-span-2 flex gap-3">
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
-            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Saving...' : 'Save Paper'}
             </button>
           </div>
@@ -124,9 +124,9 @@ function PapersTab({ projectId }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {papers.map((paper) => (
-            <div key={paper.id} className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5 hover:border-[#00B4D8]/30 transition-all duration-300">
+            <div key={paper.id} className="bg-[#150825] rounded-xl p-5 border border-white/5 hover:border-[#A855F7]/30 transition-all duration-300">
               <h3 className="font-semibold text-white text-sm mb-1">{paper.title}</h3>
-              <p className="text-xs text-[#00B4D8] mb-2">{paper.authors} {paper.year ? `· ${paper.year}` : ''}</p>
+              <p className="text-xs text-[#A855F7] mb-2">{paper.authors} {paper.year ? `· ${paper.year}` : ''}</p>
               <p className="text-xs text-gray-400 mb-4 line-clamp-3">{paper.abstract}</p>
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {(paper.tags || []).map((tag) => (
@@ -134,10 +134,10 @@ function PapersTab({ projectId }) {
                 ))}
               </div>
               {summaries[paper.id] && (
-                <div className="bg-[#0D1B2A] rounded-lg p-3 mb-3 text-xs text-gray-300 leading-relaxed">{summaries[paper.id]}</div>
+                <div className="bg-[#0A000F] rounded-lg p-3 mb-3 text-xs text-gray-300 leading-relaxed">{summaries[paper.id]}</div>
               )}
               <button onClick={() => handleSummarize(paper.id, paper.abstract)} disabled={summarizing[paper.id]}
-                className="text-xs bg-[#00B4D8]/10 text-[#00B4D8] hover:bg-[#00B4D8]/20 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors">
+                className="text-xs bg-[#A855F7]/10 text-[#A855F7] hover:bg-[#A855F7]/20 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors">
                 {summarizing[paper.id] ? '⏳ Summarizing...' : '✨ AI Summary'}
               </button>
             </div>
@@ -184,22 +184,22 @@ function ExperimentsTab({ projectId }) {
     <div>
       <div className="flex justify-end mb-4">
         <button onClick={() => setShowForm((v) => !v)}
-          className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          className="bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           + Add Experiment
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-[#1A2B3C] rounded-xl p-6 border border-[#00B4D8]/20 mb-6 space-y-4">
+        <form onSubmit={handleAdd} className="bg-[#150825] rounded-xl p-6 border border-[#A855F7]/20 mb-6 space-y-4">
           <div>
             <label className="text-xs text-gray-400 mb-1 block">Name *</label>
             <input type="text" required placeholder="Experiment name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none placeholder:text-gray-600" />
           </div>
           <div>
             <label className="text-xs text-gray-400 mb-1 block">Status</label>
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:outline-none">
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:outline-none">
               <option>Pending</option>
               <option>Active</option>
               <option>Completed</option>
@@ -208,11 +208,11 @@ function ExperimentsTab({ projectId }) {
           <div>
             <label className="text-xs text-gray-400 mb-1 block">Hypothesis</label>
             <textarea placeholder="Your hypothesis..." value={form.hypothesis} onChange={(e) => setForm({ ...form, hypothesis: e.target.value })} rows={2}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none placeholder:text-gray-600" />
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
-            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Saving...' : 'Save Experiment'}
             </button>
           </div>
@@ -225,7 +225,7 @@ function ExperimentsTab({ projectId }) {
           <p className="text-sm">No experiments yet. Click <strong className="text-gray-300">+ Add Experiment</strong> to get started.</p>
         </div>
       ) : (
-        <div className="bg-[#1A2B3C] rounded-xl border border-white/5 overflow-hidden">
+        <div className="bg-[#150825] rounded-xl border border-white/5 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/5">
@@ -290,26 +290,26 @@ function InsightsTab({ projectId }) {
     <div>
       <div className="flex justify-end mb-4">
         <button onClick={() => setShowForm((v) => !v)}
-          className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          className="bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           + Add Insight
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-[#1A2B3C] rounded-xl p-6 border border-[#00B4D8]/20 mb-6 space-y-4">
+        <form onSubmit={handleAdd} className="bg-[#150825] rounded-xl p-6 border border-[#A855F7]/20 mb-6 space-y-4">
           <div>
             <label className="text-xs text-gray-400 mb-1 block">Title *</label>
             <input type="text" required placeholder="Insight title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none placeholder:text-gray-600" />
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none placeholder:text-gray-600" />
           </div>
           <div>
             <label className="text-xs text-gray-400 mb-1 block">Content</label>
             <textarea placeholder="Describe this insight..." value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={3}
-              className="w-full bg-[#0D1B2A] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none resize-none placeholder:text-gray-600" />
+              className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
-            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Saving...' : 'Save Insight'}
             </button>
           </div>
@@ -324,7 +324,7 @@ function InsightsTab({ projectId }) {
       ) : (
         <div className="space-y-4">
           {insights.map((insight) => (
-            <div key={insight.id} className="bg-[#1A2B3C] rounded-xl p-5 border border-white/5 hover:border-[#00B4D8]/30 transition-all duration-300">
+            <div key={insight.id} className="bg-[#150825] rounded-xl p-5 border border-white/5 hover:border-[#A855F7]/30 transition-all duration-300">
               <h3 className="font-semibold text-white text-sm mb-1">💡 {insight.title}</h3>
               <p className="text-xs text-gray-400 mb-3">{insight.content}</p>
               <span className="text-[10px] text-gray-500">{insight._count?.linkedPapers || 0} linked papers</span>
@@ -354,9 +354,9 @@ function WorkflowTab({ projectId }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       {columns.map((col) => (
-        <div key={col.title} className="bg-[#0D1B2A] rounded-xl border border-white/5 p-4">
+        <div key={col.title} className="bg-[#0A000F] rounded-xl border border-white/5 p-4">
           <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#00B4D8]" />
+            <span className="w-2 h-2 rounded-full bg-[#A855F7]" />
             {col.title}
             <span className="text-xs text-gray-500 ml-auto">{col.items.length}</span>
           </h4>
@@ -364,7 +364,7 @@ function WorkflowTab({ projectId }) {
             {col.items.map((item) => (
               <div
                 key={item.id}
-                className="bg-[#1A2B3C] rounded-lg p-3 border border-white/5 hover:border-[#00B4D8]/20 transition-all duration-200"
+                className="bg-[#150825] rounded-lg p-3 border border-white/5 hover:border-[#A855F7]/20 transition-all duration-200"
               >
                 <p className="text-xs text-white mb-1">{item.name}</p>
                 {item.hypothesis && (
@@ -413,7 +413,7 @@ export default function ProjectWorkspace() {
             <select
               value={id || ''}
               onChange={(e) => navigate(`/project/${e.target.value}`)}
-              className="bg-[#1A2B3C] text-white text-sm rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
+              className="bg-[#150825] text-white text-sm rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
             >
               {allProjects.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -430,14 +430,14 @@ export default function ProjectWorkspace() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-[#1A2B3C] rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-6 bg-[#150825] rounded-xl p-1 w-fit">
         {tabs.map((tab, i) => (
           <button
             key={tab}
             onClick={() => setActiveTab(i)}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === i
-                ? 'bg-[#00B4D8] text-white shadow-lg shadow-[#00B4D8]/20'
+                ? 'bg-[#A855F7] text-white shadow-lg shadow-[#A855F7]/20'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >

@@ -23,9 +23,9 @@ export default function Sidebar() {
     : 'U'
 
   return (
-    <aside className="w-64 min-h-screen bg-[#1A2B3C] flex flex-col border-r border-white/5 shrink-0">
+    <aside className="w-64 min-h-screen bg-[#150825] flex flex-col border-r border-white/5 shrink-0">
       <div className="px-6 py-6">
-        <h1 className="text-2xl font-bold tracking-wider text-[#00B4D8]">NEXUS</h1>
+        <h1 className="text-2xl font-bold tracking-wider text-[#A855F7]">NEXUS</h1>
         <p className="text-xs text-gray-400 mt-1">Research Intelligence</p>
       </div>
 
@@ -37,7 +37,7 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                 isActive
-                  ? 'bg-[#0D1B2A] text-[#00B4D8] border-l-2 border-[#00B4D8]'
+                  ? 'bg-[#0A000F] text-[#A855F7] border-l-2 border-[#A855F7]'
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
               }`
             }
@@ -50,7 +50,7 @@ export default function Sidebar() {
 
       <div className="px-4 py-4 border-t border-white/5">
         <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#00B4D8] to-[#1A6FBF] flex items-center justify-center text-sm font-bold">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#A855F7] to-[#7C3AED] flex items-center justify-center text-sm font-bold">
             {initials}
           </div>
           <div className="flex-1 min-w-0">

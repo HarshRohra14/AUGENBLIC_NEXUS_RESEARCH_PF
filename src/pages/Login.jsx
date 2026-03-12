@@ -29,24 +29,24 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0D1B2A] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0A000F] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold tracking-wider text-[#00B4D8]">NEXUS</h1>
+          <h1 className="text-4xl font-bold tracking-wider text-[#A855F7]">NEXUS</h1>
           <p className="text-gray-400 text-sm mt-2">Research Intelligence Platform</p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#1A2B3C] rounded-2xl p-8 border border-white/5 shadow-2xl">
+        <div className="bg-[#150825] rounded-2xl p-8 border border-white/5 shadow-2xl">
           {/* Tabs */}
-          <div className="flex gap-1 bg-[#0D1B2A] rounded-xl p-1 mb-8">
+          <div className="flex gap-1 bg-[#0A000F] rounded-xl p-1 mb-8">
             {['login', 'register'].map((m) => (
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(null) }}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-all duration-200 ${
-                  mode === m ? 'bg-[#00B4D8] text-white' : 'text-gray-400 hover:text-white'
+                  mode === m ? 'bg-[#A855F7] text-white' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 {m === 'login' ? 'Sign In' : 'Register'}
@@ -64,7 +64,7 @@ export default function Login() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
-                  className="w-full bg-[#0D1B2A] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none transition-colors placeholder:text-gray-600"
+                  className="w-full bg-[#0A000F] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none transition-colors placeholder:text-gray-600"
                 />
               </div>
             )}
@@ -77,7 +77,7 @@ export default function Login() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
-                className="w-full bg-[#0D1B2A] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none transition-colors placeholder:text-gray-600"
+                className="w-full bg-[#0A000F] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none transition-colors placeholder:text-gray-600"
               />
             </div>
 
@@ -89,7 +89,7 @@ export default function Login() {
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
-                className="w-full bg-[#0D1B2A] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none transition-colors placeholder:text-gray-600"
+                className="w-full bg-[#0A000F] text-white text-sm rounded-xl px-4 py-3 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none transition-colors placeholder:text-gray-600"
               />
             </div>
 
@@ -102,7 +102,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl text-sm font-medium transition-colors mt-2"
+              className="w-full bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl text-sm font-medium transition-colors mt-2"
             >
               {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
