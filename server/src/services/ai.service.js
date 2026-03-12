@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const HF_BASE = 'https://api-inference.huggingface.co/models';
+const HF_BASE = 'https://router.huggingface.co/hf-inference/models';
 
 async function hfRequest(model, body, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
