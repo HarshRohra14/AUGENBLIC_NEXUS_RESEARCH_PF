@@ -23,6 +23,25 @@ async function request(path, options = {}) {
   return res.json()
 }
 
+async function formDataRequest(path, data, file) {
+  const token = getToken()
+  const form = new FormData()
+  Object.entries(data).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') form.append(k, String(v))
+  })
+  if (file) form.append('file', file)
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error(err.error || `Request failed: ${res.status}`)
+  }
+  return res.json()
+}
+
 export const api = {
   // Auth
   register: (data) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
@@ -39,14 +58,14 @@ export const api = {
 
   // Papers
   getPapers: (projectId) => request(`/api/papers/project/${projectId}`),
-  createPaper: (projectId, data) => request(`/api/papers/project/${projectId}`, { method: 'POST', body: JSON.stringify(data) }),
+  createPaper: (projectId, data, file) => formDataRequest(`/api/papers/project/${projectId}`, data, file),
   updatePaper: (id, data) => request(`/api/papers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deletePaper: (id) => request(`/api/papers/${id}`, { method: 'DELETE' }),
   summarizePaper: (id) => request(`/api/papers/${id}/summarize`, { method: 'POST' }),
 
   // Experiments
   getExperiments: (projectId) => request(`/api/experiments/project/${projectId}`),
-  createExperiment: (projectId, data) => request(`/api/experiments/project/${projectId}`, { method: 'POST', body: JSON.stringify(data) }),
+  createExperiment: (projectId, data, file) => formDataRequest(`/api/experiments/project/${projectId}`, data, file),
   updateExperiment: (id, data) => request(`/api/experiments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteExperiment: (id) => request(`/api/experiments/${id}`, { method: 'DELETE' }),
   getIterations: (expId) => request(`/api/experiments/${expId}/iterations`),
@@ -54,7 +73,7 @@ export const api = {
 
   // Insights
   getInsights: (projectId) => request(`/api/insights/project/${projectId}`),
-  createInsight: (projectId, data) => request(`/api/insights/project/${projectId}`, { method: 'POST', body: JSON.stringify(data) }),
+  createInsight: (projectId, data, file) => formDataRequest(`/api/insights/project/${projectId}`, data, file),
   updateInsight: (id, data) => request(`/api/insights/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteInsight: (id) => request(`/api/insights/${id}`, { method: 'DELETE' }),
   linkInsights: (id, data) => request(`/api/insights/${id}/link`, { method: 'POST', body: JSON.stringify(data) }),

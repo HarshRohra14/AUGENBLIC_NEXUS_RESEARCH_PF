@@ -61,6 +61,7 @@ model Experiment {
   results      String?
   status       String                @default("pending")
   hypothesisId String?
+  fileUrl      String?
   projectId    String
   project      Project               @relation(fields: [projectId], references: [id])
   iterations   ExperimentIteration[]
@@ -81,6 +82,7 @@ model Insight {
   id          String             @id @default(uuid())
   title       String
   description String
+  fileUrl     String?
   projectId   String
   project     Project            @relation(fields: [projectId], references: [id])
   papers      InsightPaperLink[]

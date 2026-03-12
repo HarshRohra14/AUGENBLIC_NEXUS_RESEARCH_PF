@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const authMiddleware = require('../middleware/auth');
+const { upload } = require('../middleware/upload');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -30,7 +31,7 @@ router.get('/project/:projectId', async (req, res, next) => {
 });
 
 // POST /api/experiments/project/:projectId
-router.post('/project/:projectId', async (req, res, next) => {
+router.post('/project/:projectId', upload.single('file'), async (req, res, next) => {
   try {
     const project = await prisma.project.findFirst({
       where: { id: req.params.projectId, userId: req.user.id },
@@ -39,18 +40,23 @@ router.post('/project/:projectId', async (req, res, next) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    const { name, objective, methodology, status } = req.body;
+    const { name, objective, hypothesis, methodology, status } = req.body;
+    // accept 'hypothesis' as alias for 'objective' for backwards compat
+    const finalObjective = objective || hypothesis || '';
 
-    if (!name || !objective) {
-      return res.status(400).json({ error: 'Name and objective are required' });
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
     }
+
+    const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     const experiment = await prisma.experiment.create({
       data: {
         name,
-        objective,
+        objective: finalObjective,
         methodology: methodology || null,
-        status: status || 'pending',
+        status: status || 'Pending',
+        fileUrl,
         projectId: req.params.projectId,
       },
     });

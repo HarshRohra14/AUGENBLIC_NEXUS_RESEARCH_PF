@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const authMiddleware = require('../middleware/auth');
+const { upload } = require('../middleware/upload');
 const { summarizePaper } = require('../services/ai.service');
 
 const router = express.Router();
@@ -32,7 +33,7 @@ router.get('/project/:projectId', async (req, res, next) => {
 });
 
 // POST /api/papers/project/:projectId
-router.post('/project/:projectId', async (req, res, next) => {
+router.post('/project/:projectId', upload.single('file'), async (req, res, next) => {
   try {
     const project = await prisma.project.findFirst({
       where: { id: req.params.projectId, userId: req.user.id },
@@ -54,6 +55,8 @@ router.post('/project/:projectId', async (req, res, next) => {
         ? authors.split(',').map((a) => a.trim()).filter(Boolean)
         : [];
 
+    const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
     const paper = await prisma.paper.create({
       data: {
         title,
@@ -61,6 +64,7 @@ router.post('/project/:projectId', async (req, res, next) => {
         year: year ? parseInt(year, 10) : null,
         abstract: abstract || null,
         content: content || null,
+        fileUrl,
         tags: tags || [],
         keywords: [],
         projectId: req.params.projectId,

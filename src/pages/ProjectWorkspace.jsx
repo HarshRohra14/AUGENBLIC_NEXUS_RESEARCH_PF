@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 
@@ -36,6 +36,8 @@ function PapersTab({ projectId }) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ title: '', authors: '', year: '', abstract: '' })
   const [saving, setSaving] = useState(false)
+  const [file, setFile] = useState(null)
+  const fileInputRef = useRef(null)
 
   const loadPapers = () => {
     if (!projectId) return
@@ -49,8 +51,9 @@ function PapersTab({ projectId }) {
     if (!form.title.trim()) return
     setSaving(true)
     try {
-      await api.createPaper(projectId, { ...form, year: form.year ? Number(form.year) : undefined })
+      await api.createPaper(projectId, { ...form, year: form.year ? Number(form.year) : undefined }, file)
       setForm({ title: '', authors: '', year: '', abstract: '' })
+      setFile(null)
       setShowForm(false)
       loadPapers()
     } catch (err) {
@@ -107,6 +110,22 @@ function PapersTab({ projectId }) {
             <textarea placeholder="Paper abstract..." value={form.abstract} onChange={(e) => setForm({ ...form, abstract: e.target.value })} rows={3}
               className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
+          <div className="md:col-span-2">
+            <label className="text-xs text-gray-400 mb-1 block">Attach File <span className="text-gray-600">(PDF or .txt, optional)</span></label>
+            <input ref={fileInputRef} type="file" accept=".pdf,.txt,application/pdf,text/plain" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); e.target.value = '' }} />
+            {file ? (
+              <div className="flex items-center gap-2 bg-[#1D0A30] border border-[#A855F7]/30 rounded-lg px-3 py-2 text-xs text-purple-300">
+                <span>📄</span>
+                <span className="truncate">{file.name}</span>
+                <button type="button" onClick={() => setFile(null)} className="text-gray-500 hover:text-red-400 ml-auto">✕</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#A855F7] bg-[#0A000F] border border-white/5 hover:border-[#A855F7]/30 rounded-lg px-3 py-2 transition-colors">
+                📎 Attach PDF or text file
+              </button>
+            )}
+          </div>
           <div className="md:col-span-2 flex gap-3">
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
             <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
@@ -140,6 +159,12 @@ function PapersTab({ projectId }) {
                 className="text-xs bg-[#A855F7]/10 text-[#A855F7] hover:bg-[#A855F7]/20 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors">
                 {summarizing[paper.id] ? '⏳ Summarizing...' : '✨ AI Summary'}
               </button>
+              {paper.fileUrl && (
+                <a href={`http://localhost:3000${paper.fileUrl}`} target="_blank" rel="noopener noreferrer"
+                  className="text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors ml-2">
+                  📄 View file
+                </a>
+              )}
             </div>
           ))}
         </div>
@@ -154,6 +179,8 @@ function ExperimentsTab({ projectId }) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', hypothesis: '', status: 'Pending' })
   const [saving, setSaving] = useState(false)
+  const [file, setFile] = useState(null)
+  const fileInputRef = useRef(null)
 
   const loadExperiments = () => {
     if (!projectId) return
@@ -167,8 +194,9 @@ function ExperimentsTab({ projectId }) {
     if (!form.name.trim()) return
     setSaving(true)
     try {
-      await api.createExperiment(projectId, form)
+      await api.createExperiment(projectId, form, file)
       setForm({ name: '', hypothesis: '', status: 'Pending' })
+      setFile(null)
       setShowForm(false)
       loadExperiments()
     } catch (err) {
@@ -210,6 +238,22 @@ function ExperimentsTab({ projectId }) {
             <textarea placeholder="Your hypothesis..." value={form.hypothesis} onChange={(e) => setForm({ ...form, hypothesis: e.target.value })} rows={2}
               className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Attach File <span className="text-gray-600">(PDF or .txt, optional)</span></label>
+            <input ref={fileInputRef} type="file" accept=".pdf,.txt,application/pdf,text/plain" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); e.target.value = '' }} />
+            {file ? (
+              <div className="flex items-center gap-2 bg-[#1D0A30] border border-[#A855F7]/30 rounded-lg px-3 py-2 text-xs text-purple-300">
+                <span>📄</span>
+                <span className="truncate">{file.name}</span>
+                <button type="button" onClick={() => setFile(null)} className="text-gray-500 hover:text-red-400 ml-auto">✕</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#A855F7] bg-[#0A000F] border border-white/5 hover:border-[#A855F7]/30 rounded-lg px-3 py-2 transition-colors">
+                📎 Attach PDF or text file
+              </button>
+            )}
+          </div>
           <div className="flex gap-3">
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
             <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
@@ -242,7 +286,7 @@ function ExperimentsTab({ projectId }) {
                   <td className="px-5 py-4">
                     <span className={`text-xs px-2.5 py-1 rounded-full ${statusColors[exp.status] || 'bg-gray-500/20 text-gray-300'}`}>{exp.status}</span>
                   </td>
-                  <td className="px-5 py-4 text-gray-400 text-xs hidden md:table-cell max-w-xs truncate">{exp.hypothesis}</td>
+                  <td className="px-5 py-4 text-gray-400 text-xs hidden md:table-cell max-w-xs truncate">{exp.objective || exp.hypothesis}</td>
                   <td className="px-5 py-4 text-gray-500 text-xs">{exp.createdAt ? new Date(exp.createdAt).toLocaleDateString() : '—'}</td>
                 </tr>
               ))}
@@ -260,6 +304,8 @@ function InsightsTab({ projectId }) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ title: '', content: '' })
   const [saving, setSaving] = useState(false)
+  const [file, setFile] = useState(null)
+  const fileInputRef = useRef(null)
 
   const loadInsights = () => {
     if (!projectId) return
@@ -273,8 +319,9 @@ function InsightsTab({ projectId }) {
     if (!form.title.trim()) return
     setSaving(true)
     try {
-      await api.createInsight(projectId, form)
+      await api.createInsight(projectId, form, file)
       setForm({ title: '', content: '' })
+      setFile(null)
       setShowForm(false)
       loadInsights()
     } catch (err) {
@@ -307,6 +354,22 @@ function InsightsTab({ projectId }) {
             <textarea placeholder="Describe this insight..." value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={3}
               className="w-full bg-[#0A000F] text-white text-sm rounded-lg px-3 py-2.5 border border-white/5 focus:border-[#A855F7]/50 focus:outline-none resize-none placeholder:text-gray-600" />
           </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Attach File <span className="text-gray-600">(PDF or .txt, optional)</span></label>
+            <input ref={fileInputRef} type="file" accept=".pdf,.txt,application/pdf,text/plain" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); e.target.value = '' }} />
+            {file ? (
+              <div className="flex items-center gap-2 bg-[#1D0A30] border border-[#A855F7]/30 rounded-lg px-3 py-2 text-xs text-purple-300">
+                <span>📄</span>
+                <span className="truncate">{file.name}</span>
+                <button type="button" onClick={() => setFile(null)} className="text-gray-500 hover:text-red-400 ml-auto">✕</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#A855F7] bg-[#0A000F] border border-white/5 hover:border-[#A855F7]/30 rounded-lg px-3 py-2 transition-colors">
+                📎 Attach PDF or text file
+              </button>
+            )}
+          </div>
           <div className="flex gap-3">
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-sm transition-colors">Cancel</button>
             <button type="submit" disabled={saving} className="px-5 py-2 bg-[#A855F7] hover:bg-[#A855F7]/80 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
@@ -326,8 +389,16 @@ function InsightsTab({ projectId }) {
           {insights.map((insight) => (
             <div key={insight.id} className="bg-[#150825] rounded-xl p-5 border border-white/5 hover:border-[#A855F7]/30 transition-all duration-300">
               <h3 className="font-semibold text-white text-sm mb-1">💡 {insight.title}</h3>
-              <p className="text-xs text-gray-400 mb-3">{insight.content}</p>
-              <span className="text-[10px] text-gray-500">{insight._count?.linkedPapers || 0} linked papers</span>
+              <p className="text-xs text-gray-400 mb-3">{insight.description || insight.content}</p>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-gray-500">{insight._count?.linkedPapers || 0} linked papers</span>
+                {insight.fileUrl && (
+                  <a href={`http://localhost:3000${insight.fileUrl}`} target="_blank" rel="noopener noreferrer"
+                    className="text-[10px] text-purple-400 hover:text-purple-300 transition-colors">
+                    📄 View file
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>

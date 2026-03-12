@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const authMiddleware = require('../middleware/auth');
+const { upload } = require('../middleware/upload');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -32,7 +33,7 @@ router.get('/project/:projectId', async (req, res, next) => {
 });
 
 // POST /api/insights/project/:projectId
-router.post('/project/:projectId', async (req, res, next) => {
+router.post('/project/:projectId', upload.single('file'), async (req, res, next) => {
   try {
     const project = await prisma.project.findFirst({
       where: { id: req.params.projectId, userId: req.user.id },
@@ -41,16 +42,21 @@ router.post('/project/:projectId', async (req, res, next) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    const { title, description } = req.body;
+    const { title, description, content } = req.body;
+    // accept 'content' as alias for 'description' for backwards compat
+    const finalDescription = description || content || '';
 
-    if (!title || !description) {
-      return res.status(400).json({ error: 'Title and description are required' });
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required' });
     }
+
+    const fileUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     const insight = await prisma.insight.create({
       data: {
         title,
-        description,
+        description: finalDescription,
+        fileUrl,
         projectId: req.params.projectId,
       },
     });
