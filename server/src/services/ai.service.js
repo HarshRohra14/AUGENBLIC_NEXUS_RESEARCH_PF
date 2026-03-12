@@ -13,7 +13,11 @@ async function hfRequest(model, body, retries = 3) {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    if (!response.ok && !text.startsWith('{') && !text.startsWith('[')) {
+      throw new Error(`HuggingFace API error: ${text.trim()}`);
+    }
+    const data = JSON.parse(text);
 
     if (data.error && data.error.includes('loading') && attempt < retries) {
       const wait = data.estimated_time ? Math.min(data.estimated_time * 1000, 30000) : 20000;
@@ -71,7 +75,7 @@ Context: ${projectContext.slice(0, 1500)}
 
 List the gaps as numbered points with brief explanations. [/INST]`;
 
-  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.1', {
+  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.3', {
     inputs: prompt,
     parameters: {
       max_new_tokens: 500,
@@ -95,7 +99,7 @@ ${insightsText.slice(0, 1500)}
 
 For each connection, specify which insights are connected and explain the relationship. [/INST]`;
 
-  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.1', {
+  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.3', {
     inputs: prompt,
     parameters: {
       max_new_tokens: 500,
@@ -114,7 +118,7 @@ Active project context: ${context.slice(0, 1000)}
 
 User question: ${message} [/INST]`;
 
-  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.1', {
+  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.3', {
     inputs: prompt,
     parameters: {
       max_new_tokens: 500,
