@@ -1,7 +1,10 @@
 const fetch = require('node-fetch');
 
 const HF_BASE = 'https://router.huggingface.co/hf-inference/models';
+// Non-gated model with OpenAI-compatible chat completions support
+const CHAT_MODEL = 'HuggingFaceH4/zephyr-7b-beta';
 
+// Pipeline endpoint — used for BART summarization
 async function hfRequest(model, body, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     const response = await fetch(`${HF_BASE}/${model}`, {
@@ -21,18 +24,44 @@ async function hfRequest(model, body, retries = 3) {
 
     if (data.error && data.error.includes('loading') && attempt < retries) {
       const wait = data.estimated_time ? Math.min(data.estimated_time * 1000, 30000) : 20000;
-      console.log(`Model ${model} is loading. Retrying in ${wait / 1000}s (attempt ${attempt}/${retries})`);
+      console.log(`Model ${model} loading, retrying in ${wait / 1000}s (${attempt}/${retries})`);
       await new Promise((r) => setTimeout(r, wait));
       continue;
     }
 
-    if (data.error) {
-      throw new Error(`HuggingFace API error: ${data.error}`);
-    }
-
+    if (data.error) throw new Error(`HuggingFace API error: ${data.error}`);
     return data;
   }
   throw new Error('Max retries exceeded waiting for model to load');
+}
+
+// OpenAI-compatible chat completions endpoint — used for text generation
+async function hfChat(systemPrompt, userMessage) {
+  const response = await fetch(`${HF_BASE}/${CHAT_MODEL}/v1/chat/completions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.HF_API_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: CHAT_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
+      stream: false,
+    }),
+  });
+
+  const text = await response.text();
+  if (!response.ok && !text.startsWith('{')) {
+    throw new Error(`HuggingFace API error: ${text.trim()}`);
+  }
+  const data = JSON.parse(text);
+  if (data.error) throw new Error(`HuggingFace API error: ${data.error}`);
+  return data.choices?.[0]?.message?.content || '';
 }
 
 async function summarizePaper(text) {
@@ -48,43 +77,29 @@ async function extractKeywords(text) {
     const data = await hfRequest('yanekyuk/bert-uncased-keyword-extractor', {
       inputs: text.slice(0, 512),
     });
-    // NER-style model returns array of entities
     if (Array.isArray(data)) {
-      const keywords = data
+      return data
         .filter((item) => item.score > 0.5)
         .map((item) => item.word)
-        .filter((w, i, arr) => arr.indexOf(w) === i);
-      return keywords.slice(0, 15);
+        .filter((w, i, arr) => arr.indexOf(w) === i)
+        .slice(0, 15);
     }
     return [];
   } catch {
-    // Fallback: extract keywords using zero-shot classification
-    const candidates = text
+    return text
       .split(/\s+/)
       .filter((w) => w.length > 4)
       .filter((w, i, arr) => arr.indexOf(w) === i)
-      .slice(0, 20);
-    return candidates.slice(0, 10);
+      .slice(0, 10);
   }
 }
 
 async function generateResearchGaps(projectContext) {
-  const prompt = `<s>[INST] You are a research assistant for Nexus Research Platform. Analyze the following research project context and identify 3-5 specific research gaps that could be explored further.
-
-Context: ${projectContext.slice(0, 1500)}
-
-List the gaps as numbered points with brief explanations. [/INST]`;
-
-  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.3', {
-    inputs: prompt,
-    parameters: {
-      max_new_tokens: 500,
-      temperature: 0.7,
-      return_full_text: false,
-    },
-  });
-
-  return data[0]?.generated_text || 'Unable to generate gap analysis';
+  const result = await hfChat(
+    'You are a research assistant for Nexus Research Platform. Be concise and structured.',
+    `Analyze the following research project context and identify 3-5 specific research gaps that could be explored further. List them as numbered points with brief explanations.\n\nContext: ${projectContext.slice(0, 1500)}`
+  );
+  return result || 'Unable to generate gap analysis';
 }
 
 async function suggestConnections(insightsList) {
@@ -92,42 +107,19 @@ async function suggestConnections(insightsList) {
     .map((ins, i) => `${i + 1}. ${ins.title}: ${ins.description}`)
     .join('\n');
 
-  const prompt = `<s>[INST] You are a research assistant for Nexus Research Platform. Given these research insights, suggest 3 non-obvious connections between them that could lead to new research directions.
-
-Insights:
-${insightsText.slice(0, 1500)}
-
-For each connection, specify which insights are connected and explain the relationship. [/INST]`;
-
-  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.3', {
-    inputs: prompt,
-    parameters: {
-      max_new_tokens: 500,
-      temperature: 0.8,
-      return_full_text: false,
-    },
-  });
-
-  return data[0]?.generated_text || 'Unable to suggest connections';
+  const result = await hfChat(
+    'You are a research assistant for Nexus Research Platform. Be concise and structured.',
+    `Given these research insights, suggest 3 non-obvious connections between them that could lead to new research directions. For each connection specify which insights are linked and explain the relationship.\n\nInsights:\n${insightsText.slice(0, 1500)}`
+  );
+  return result || 'Unable to suggest connections';
 }
 
 async function chatWithAI(message, context) {
-  const prompt = `<s>[INST] You are a research assistant for Nexus Research Platform. You help researchers analyze papers, find gaps, and make connections across their research projects.
-
-Active project context: ${context.slice(0, 1000)}
-
-User question: ${message} [/INST]`;
-
-  const data = await hfRequest('mistralai/Mistral-7B-Instruct-v0.3', {
-    inputs: prompt,
-    parameters: {
-      max_new_tokens: 500,
-      temperature: 0.7,
-      return_full_text: false,
-    },
-  });
-
-  return data[0]?.generated_text || 'Unable to generate a response';
+  const result = await hfChat(
+    `You are a research assistant for Nexus Research Platform. You help researchers analyze papers, find gaps, and make connections across their research projects. Active project context: ${context.slice(0, 800)}`,
+    message
+  );
+  return result || 'Unable to generate a response';
 }
 
 module.exports = {
