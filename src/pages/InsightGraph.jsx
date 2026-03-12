@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { graphNodes, graphEdges } from '../data/mockData'
+import { useState, useEffect } from 'react'
+import { api } from '../lib/api'
 
 const typeColors = {
   paper: { bg: 'bg-[#1A6FBF]', border: 'border-[#1A6FBF]', text: 'text-[#1A6FBF]' },
@@ -75,6 +75,39 @@ const filters = ['All', 'Papers', 'Insights', 'Experiments']
 export default function InsightGraph() {
   const [selectedNode, setSelectedNode] = useState(null)
   const [activeFilter, setActiveFilter] = useState('All')
+  const [graphNodes, setGraphNodes] = useState([])
+  const [graphEdges, setGraphEdges] = useState([])
+  const [projects, setProjects] = useState([])
+  const [selectedProject, setSelectedProject] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  // Load projects list
+  useEffect(() => {
+    api.getProjects().then((data) => {
+      setProjects(data)
+      if (data.length > 0) setSelectedProject(data[0].id)
+    }).catch(console.error)
+  }, [])
+
+  // Load graph when project changes
+  useEffect(() => {
+    if (!selectedProject) return
+    setLoading(true)
+    api.getGraph(selectedProject)
+      .then((data) => {
+        // data = { nodes: [{id, label, type, x?, y?}], edges: [[aId, bId], ...] }
+        const nodes = (data.nodes || []).map((n, i) => ({
+          ...n,
+          x: n.x ?? 120 + (i % 5) * 180,
+          y: n.y ?? 120 + Math.floor(i / 5) * 150,
+        }))
+        setGraphNodes(nodes)
+        setGraphEdges(data.edges || [])
+        setSelectedNode(null)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [selectedProject])
 
   const filteredNodes = graphNodes.filter((node) => {
     if (activeFilter === 'All') return true
@@ -87,15 +120,32 @@ export default function InsightGraph() {
   const filteredNodeIds = new Set(filteredNodes.map((n) => n.id))
   const filteredEdges = graphEdges.filter(([a, b]) => filteredNodeIds.has(a) && filteredNodeIds.has(b))
 
-  const detail = selectedNode ? nodeDetails[selectedNode.id] : null
+  // Build detail panel from selected node
+  const detail = selectedNode ? {
+    title: selectedNode.label,
+    description: selectedNode.description || `A ${selectedNode.type} in your research workspace.`,
+    papers: (selectedNode.linkedPapers || []),
+    insights: (selectedNode.linkedInsights || []),
+  } : null
 
   return (
     <div className="flex h-screen">
       {/* Graph Canvas */}
       <div className="flex-1 flex flex-col">
-        {/* Filter Bar */}
-        <div className="px-6 py-4 flex items-center gap-2 border-b border-white/5">
-          <span className="text-sm text-gray-400 mr-2">Filter:</span>
+        {/* Filter & Project Bar */}
+        <div className="px-6 py-4 flex flex-wrap items-center gap-3 border-b border-white/5">
+          {projects.length > 1 && (
+            <select
+              value={selectedProject || ''}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="bg-[#1A2B3C] text-white text-xs rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
+            >
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          )}
+          <span className="text-sm text-gray-400">Filter:</span>
           {filters.map((f) => (
             <button
               key={f}
@@ -122,11 +172,23 @@ export default function InsightGraph() {
             }}
           />
 
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm z-10">
+              Loading graph...
+            </div>
+          )}
+
+          {!loading && filteredNodes.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm z-10">
+              No data available for this project.
+            </div>
+          )}
+
           {/* SVG Edges */}
           <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
             {filteredEdges.map(([aId, bId], i) => {
-              const a = graphNodes.find((n) => n.id === aId)
-              const b = graphNodes.find((n) => n.id === bId)
+              const a = filteredNodes.find((n) => n.id === aId)
+              const b = filteredNodes.find((n) => n.id === bId)
               if (!a || !b) return null
               return (
                 <line
@@ -180,44 +242,48 @@ export default function InsightGraph() {
           <>
             <div className="flex items-center gap-2 mb-4">
               <span
-                className={`w-3 h-3 rounded-full ${typeColors[selectedNode.type].bg}`}
+                className={`w-3 h-3 rounded-full ${typeColors[selectedNode.type]?.bg || 'bg-gray-400'}`}
               />
               <span className="text-xs text-gray-400 capitalize">{selectedNode.type}</span>
             </div>
             <h2 className="text-lg font-bold text-white mb-3">{detail.title}</h2>
             <p className="text-sm text-gray-400 mb-6">{detail.description}</p>
 
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">
-                Linked Papers ({detail.papers.length})
-              </h3>
-              <div className="space-y-2">
-                {detail.papers.map((p) => (
-                  <div
-                    key={p}
-                    className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
-                  >
-                    📄 {p}
-                  </div>
-                ))}
+            {detail.papers.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">
+                  Linked Papers ({detail.papers.length})
+                </h3>
+                <div className="space-y-2">
+                  {detail.papers.map((p, i) => (
+                    <div
+                      key={i}
+                      className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
+                    >
+                      📄 {typeof p === 'string' ? p : p.title || p}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div>
-              <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">
-                Linked Insights ({detail.insights.length})
-              </h3>
-              <div className="space-y-2">
-                {detail.insights.map((ins) => (
-                  <div
-                    key={ins}
-                    className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
-                  >
-                    💡 {ins}
-                  </div>
-                ))}
+            {detail.insights.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">
+                  Linked Insights ({detail.insights.length})
+                </h3>
+                <div className="space-y-2">
+                  {detail.insights.map((ins, i) => (
+                    <div
+                      key={i}
+                      className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
+                    >
+                      💡 {typeof ins === 'string' ? ins : ins.title || ins}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center">

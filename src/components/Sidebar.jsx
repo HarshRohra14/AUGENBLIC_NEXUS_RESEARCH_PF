@@ -1,16 +1,26 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const navItems = [
   { to: '/dashboard', icon: '🏠', label: 'Dashboard' },
-  { to: '/project/1', icon: '📁', label: 'Projects' },
-  { to: '/project/1?tab=experiments', icon: '🔬', label: 'Experiments' },
-  { to: '/project/1?tab=insights', icon: '💡', label: 'Insights' },
   { to: '/graph', icon: '🕸️', label: 'Knowledge Graph' },
   { to: '/assistant', icon: '🤖', label: 'AI Assistant' },
   { to: '/similarity', icon: '🔍', label: 'Similarity Check' },
 ]
 
 export default function Sidebar() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
+  const initials = user?.name
+    ? user.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+    : 'U'
+
   return (
     <aside className="w-64 min-h-screen bg-[#1A2B3C] flex flex-col border-r border-white/5 shrink-0">
       <div className="px-6 py-6">
@@ -39,14 +49,20 @@ export default function Sidebar() {
 
       <div className="px-4 py-4 border-t border-white/5">
         <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00B4D8] to-[#1A6FBF] flex items-center justify-center text-sm font-bold">
-            DR
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#00B4D8] to-[#1A6FBF] flex items-center justify-center text-sm font-bold">
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white truncate">Dr. Sarah Chen</p>
-            <p className="text-xs text-gray-500">Researcher</p>
+            <p className="text-sm text-white truncate">{user?.name || 'Researcher'}</p>
+            <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
           </div>
-          <button className="text-gray-500 hover:text-white transition-colors">⚙️</button>
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            className="text-gray-500 hover:text-red-400 transition-colors text-lg"
+          >
+            ⏻
+          </button>
         </div>
       </div>
     </aside>

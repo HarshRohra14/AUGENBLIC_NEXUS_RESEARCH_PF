@@ -1,39 +1,73 @@
-import { useState } from 'react'
-import { chatMessages as initialMessages } from '../data/mockData'
+import { useState, useEffect, useRef } from 'react'
+import { api } from '../lib/api'
 
 const quickActions = ['Summarize Papers', 'Find Gaps', 'Suggest Connections']
 
 export default function AIAssistant() {
-  const [messages, setMessages] = useState(initialMessages)
+  const [messages, setMessages] = useState([
+    { role: 'assistant', text: 'Hello! I\'m Nexus AI. Ask me anything about your research — I can summarize papers, find gaps, suggest connections, or answer questions.' }
+  ])
   const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const [projects, setProjects] = useState([])
+  const [selectedProject, setSelectedProject] = useState(null)
+  const messagesEndRef = useRef(null)
 
-  const handleSend = () => {
-    if (!input.trim()) return
-    setMessages((prev) => [
-      ...prev,
-      { role: 'user', text: input },
-      {
-        role: 'assistant',
-        text: "I'm analyzing your request against the current project context. Based on the 127 papers and 34 insights in your workspace, I'll provide a detailed response shortly. In the meantime, I've identified 3 potentially relevant connections in your Knowledge Graph.",
-      },
-    ])
+  useEffect(() => {
+    api.getProjects().then((data) => {
+      setProjects(data)
+      if (data.length > 0) setSelectedProject(data[0])
+    }).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const addMessage = (role, text) => setMessages((prev) => [...prev, { role, text }])
+
+  const handleSend = async () => {
+    const msg = input.trim()
+    if (!msg || sending) return
     setInput('')
+    addMessage('user', msg)
+    setSending(true)
+    try {
+      const context = selectedProject
+        ? `Project: ${selectedProject.name}. ${selectedProject.description || ''}`
+        : ''
+      const result = await api.aiChat(msg, context)
+      addMessage('assistant', result.response || result.message || 'No response.')
+    } catch (err) {
+      addMessage('assistant', `Error: ${err.message}`)
+    } finally {
+      setSending(false)
+    }
   }
 
-  const handleQuickAction = (action) => {
-    setMessages((prev) => [
-      ...prev,
-      { role: 'user', text: action },
-      {
-        role: 'assistant',
-        text:
-          action === 'Summarize Papers'
-            ? 'Here\'s a summary of the 6 most recent papers in your active project:\n\n1. **EfficientNet** — Introduces compound scaling for CNNs, achieving SOTA accuracy with fewer parameters.\n2. **Attention Is All You Need** — Foundational transformer architecture paper, replacing recurrence with self-attention.\n3. **GNN Climate Prediction** — Applies graph neural networks to weather forecasting, outperforming numerical models.\n4. **DARTS** — Differentiable NAS approach that reduces search cost through continuous relaxation.\n5. **ClimaX** — Foundation model for weather/climate with strong transfer learning capabilities.\n6. **Sparse Transformers** — Reduces attention complexity from O(n²) to O(n√n) using sparse factorizations.'
-            : action === 'Find Gaps'
-            ? 'I\'ve identified 4 research gaps across your projects:\n\n1. **Missing temporal modeling** in GNN-based climate prediction — consider Temporal Graph Networks.\n2. **No efficiency benchmarks** for NAS-discovered architectures on edge devices.\n3. **Lack of cross-modal evaluation** — transformer efficiency findings haven\'t been tested on vision tasks.\n4. **Transfer learning baselines** are incomplete — ClimaX needs comparison with non-foundation approaches.'
-            : 'Cross-project connections discovered:\n\n🔗 **NAS ↔ Climate**: Use architecture search to optimize GNN topology for weather data.\n🔗 **Efficiency ↔ Foundation Models**: Sparse attention could enable real-time ClimaX inference.\n🔗 **GNN ↔ NAS**: Graph-based search spaces could encode architecture topology naturally.\n\nThese have been added to your Knowledge Graph for visualization.',
-      },
-    ])
+  const handleQuickAction = async (action) => {
+    addMessage('user', action)
+    setSending(true)
+    try {
+      let result
+      const context = selectedProject
+        ? `Project: ${selectedProject.name}. ${selectedProject.description || ''}`
+        : ''
+      if (action === 'Find Gaps') {
+        result = await api.aiGaps(context)
+        addMessage('assistant', result.gaps || result.response || JSON.stringify(result))
+      } else if (action === 'Suggest Connections') {
+        result = await api.aiConnections(context)
+        addMessage('assistant', result.connections || result.response || JSON.stringify(result))
+      } else {
+        result = await api.aiChat(action, context)
+        addMessage('assistant', result.response || result.message || 'No response.')
+      }
+    } catch (err) {
+      addMessage('assistant', `Error: ${err.message}`)
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -42,13 +76,24 @@ export default function AIAssistant() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00B4D8] to-[#1A6FBF] flex items-center justify-center text-sm">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#00B4D8] to-[#1A6FBF] flex items-center justify-center text-sm">
             🤖
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-sm font-semibold text-white">Nexus AI Assistant</h1>
-            <p className="text-xs text-green-400">Online · Analyzing 127 papers</p>
+            <p className={`text-xs ${sending ? 'text-yellow-400' : 'text-green-400'}`}>
+              {sending ? 'Thinking...' : 'Online · Ready'}
+            </p>
           </div>
+          {projects.length > 1 && (
+            <select
+              value={selectedProject?.id || ''}
+              onChange={(e) => setSelectedProject(projects.find((p) => p.id === e.target.value) || null)}
+              className="bg-[#0D1B2A] text-white text-xs rounded-lg px-3 py-1.5 border border-white/5 focus:outline-none"
+            >
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          )}
         </div>
 
         {/* Messages */}
@@ -66,6 +111,18 @@ export default function AIAssistant() {
               </div>
             </div>
           ))}
+          {sending && (
+            <div className="flex justify-start">
+              <div className="bg-[#1A2B3C] border border-white/5 rounded-2xl rounded-bl-md px-5 py-3">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-[#00B4D8] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-[#00B4D8] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-[#00B4D8] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Quick Actions */}
@@ -74,7 +131,8 @@ export default function AIAssistant() {
             <button
               key={action}
               onClick={() => handleQuickAction(action)}
-              className="text-xs bg-[#1A2B3C] text-[#00B4D8] hover:bg-[#00B4D8]/10 px-3 py-1.5 rounded-lg border border-[#00B4D8]/20 transition-colors"
+              disabled={sending}
+              className="text-xs bg-[#1A2B3C] text-[#00B4D8] hover:bg-[#00B4D8]/10 disabled:opacity-50 px-3 py-1.5 rounded-lg border border-[#00B4D8]/20 transition-colors"
             >
               {action}
             </button>
@@ -89,12 +147,14 @@ export default function AIAssistant() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              disabled={sending}
               placeholder="Ask Nexus AI about your research..."
-              className="flex-1 bg-[#1A2B3C] text-white text-sm rounded-xl px-5 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none transition-colors placeholder:text-gray-500"
+              className="flex-1 bg-[#1A2B3C] text-white text-sm rounded-xl px-5 py-3 border border-white/5 focus:border-[#00B4D8]/50 focus:outline-none transition-colors placeholder:text-gray-500 disabled:opacity-50"
             />
             <button
               onClick={handleSend}
-              className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors"
+              disabled={sending || !input.trim()}
+              className="bg-[#00B4D8] hover:bg-[#00B4D8]/80 disabled:opacity-50 text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors"
             >
               Send
             </button>
@@ -106,56 +166,34 @@ export default function AIAssistant() {
       <div className="w-80 bg-[#1A2B3C] border-l border-white/5 p-6 overflow-y-auto shrink-0">
         <h2 className="text-sm font-semibold text-white mb-4">Active Project Context</h2>
 
-        <div className="bg-[#0D1B2A] rounded-xl p-4 border border-white/5 mb-6">
-          <h3 className="text-sm font-medium text-[#00B4D8] mb-3">Neural Architecture Search</h3>
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between text-gray-400">
-              <span>Papers</span>
-              <span className="text-white">42</span>
-            </div>
-            <div className="flex justify-between text-gray-400">
-              <span>Experiments</span>
-              <span className="text-white">8</span>
-            </div>
-            <div className="flex justify-between text-gray-400">
-              <span>Insights</span>
-              <span className="text-white">12</span>
-            </div>
-            <div className="flex justify-between text-gray-400">
-              <span>Connections</span>
-              <span className="text-white">23</span>
-            </div>
+        {selectedProject ? (
+          <div className="bg-[#0D1B2A] rounded-xl p-4 border border-white/5 mb-6">
+            <h3 className="text-sm font-medium text-[#00B4D8] mb-1">{selectedProject.name}</h3>
+            <p className="text-xs text-gray-400 line-clamp-3">{selectedProject.description}</p>
           </div>
-        </div>
+        ) : (
+          <div className="bg-[#0D1B2A] rounded-xl p-4 border border-white/5 mb-6">
+            <p className="text-xs text-gray-500">No project selected</p>
+          </div>
+        )}
 
         <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">
-          Related Projects
-        </h3>
-        <div className="space-y-2 mb-6">
-          {['Climate Modeling with GNNs', 'Transformer Efficiency Study'].map((p) => (
-            <div
-              key={p}
-              className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
-            >
-              📁 {p}
-            </div>
-          ))}
-        </div>
-
-        <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">
-          Recent Insights
+          Tips
         </h3>
         <div className="space-y-2">
-          {['Architecture Scaling Laws', 'Attention Sparsity Threshold', 'GNN Expressiveness Gap'].map(
-            (ins) => (
-              <div
-                key={ins}
-                className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-300 border border-white/5"
-              >
-                💡 {ins}
-              </div>
-            )
-          )}
+          {[
+            'Ask about research gaps in your field',
+            'Request connections between your papers',
+            'Summarize your most recent findings',
+            'Get methodology suggestions',
+          ].map((tip) => (
+            <div
+              key={tip}
+              className="bg-[#0D1B2A] rounded-lg px-3 py-2 text-xs text-gray-400 border border-white/5"
+            >
+              💡 {tip}
+            </div>
+          ))}
         </div>
       </div>
     </div>

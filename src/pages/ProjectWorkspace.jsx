@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { projects, papers, experiments, insights, workflowColumns } from '../data/mockData'
+import { api } from '../lib/api'
 
 const tagColors = {
   CNN: 'bg-purple-500/20 text-purple-300',
@@ -28,7 +28,40 @@ const statusColors = {
 
 const tabs = ['Papers', 'Experiments', 'Insights', 'Workflow']
 
-function PapersTab() {
+function PapersTab({ projectId }) {
+  const [papers, setPapers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [summaries, setSummaries] = useState({})
+  const [summarizing, setSummarizing] = useState({})
+
+  useEffect(() => {
+    if (!projectId) return
+    api.getPapers(projectId)
+      .then(setPapers)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [projectId])
+
+  const handleSummarize = async (paperId, abstract) => {
+    setSummarizing((s) => ({ ...s, [paperId]: true }))
+    try {
+      let result
+      if (abstract) {
+        result = await api.aiSummarize(abstract)
+      } else {
+        result = await api.summarizePaper(paperId)
+      }
+      setSummaries((s) => ({ ...s, [paperId]: result.summary || result }))
+    } catch (err) {
+      setSummaries((s) => ({ ...s, [paperId]: 'Summary unavailable.' }))
+    } finally {
+      setSummarizing((s) => ({ ...s, [paperId]: false }))
+    }
+  }
+
+  if (loading) return <div className="text-gray-500 text-sm py-10 text-center">Loading papers...</div>
+  if (papers.length === 0) return <div className="text-gray-500 text-sm py-10 text-center">No papers yet.</div>
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {papers.map((paper) => (
@@ -38,11 +71,11 @@ function PapersTab() {
         >
           <h3 className="font-semibold text-white text-sm mb-1">{paper.title}</h3>
           <p className="text-xs text-[#00B4D8] mb-2">
-            {paper.authors} · {paper.year}
+            {paper.authors} {paper.year ? `· ${paper.year}` : ''}
           </p>
           <p className="text-xs text-gray-400 mb-4 line-clamp-3">{paper.abstract}</p>
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {paper.tags.map((tag) => (
+            {(paper.tags || []).map((tag) => (
               <span
                 key={tag}
                 className={`text-[10px] px-2 py-0.5 rounded-full ${tagColors[tag] || 'bg-gray-500/20 text-gray-300'}`}
@@ -51,8 +84,17 @@ function PapersTab() {
               </span>
             ))}
           </div>
-          <button className="text-xs bg-[#00B4D8]/10 text-[#00B4D8] hover:bg-[#00B4D8]/20 px-3 py-1.5 rounded-lg transition-colors">
-            ✨ AI Summary
+          {summaries[paper.id] && (
+            <div className="bg-[#0D1B2A] rounded-lg p-3 mb-3 text-xs text-gray-300 leading-relaxed">
+              {summaries[paper.id]}
+            </div>
+          )}
+          <button
+            onClick={() => handleSummarize(paper.id, paper.abstract)}
+            disabled={summarizing[paper.id]}
+            className="text-xs bg-[#00B4D8]/10 text-[#00B4D8] hover:bg-[#00B4D8]/20 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            {summarizing[paper.id] ? '⏳ Summarizing...' : '✨ AI Summary'}
           </button>
         </div>
       ))}
@@ -60,7 +102,21 @@ function PapersTab() {
   )
 }
 
-function ExperimentsTab() {
+function ExperimentsTab({ projectId }) {
+  const [experiments, setExperiments] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!projectId) return
+    api.getExperiments(projectId)
+      .then(setExperiments)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [projectId])
+
+  if (loading) return <div className="text-gray-500 text-sm py-10 text-center">Loading experiments...</div>
+  if (experiments.length === 0) return <div className="text-gray-500 text-sm py-10 text-center">No experiments yet.</div>
+
   return (
     <div className="bg-[#1A2B3C] rounded-xl border border-white/5 overflow-hidden">
       <table className="w-full text-sm">
@@ -74,17 +130,19 @@ function ExperimentsTab() {
         </thead>
         <tbody className="divide-y divide-white/5">
           {experiments.map((exp) => (
-            <tr key={exp.id} className="hover:bg-white/[0.02] transition-colors">
+            <tr key={exp.id} className="hover:bg-white/2 transition-colors">
               <td className="px-5 py-4 text-white font-medium">{exp.name}</td>
               <td className="px-5 py-4">
-                <span className={`text-xs px-2.5 py-1 rounded-full ${statusColors[exp.status]}`}>
+                <span className={`text-xs px-2.5 py-1 rounded-full ${statusColors[exp.status] || 'bg-gray-500/20 text-gray-300'}`}>
                   {exp.status}
                 </span>
               </td>
               <td className="px-5 py-4 text-gray-400 text-xs hidden md:table-cell max-w-xs truncate">
                 {exp.hypothesis}
               </td>
-              <td className="px-5 py-4 text-gray-500 text-xs">{exp.date}</td>
+              <td className="px-5 py-4 text-gray-500 text-xs">
+                {exp.createdAt ? new Date(exp.createdAt).toLocaleDateString() : '—'}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -93,7 +151,21 @@ function ExperimentsTab() {
   )
 }
 
-function InsightsTab() {
+function InsightsTab({ projectId }) {
+  const [insights, setInsights] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!projectId) return
+    api.getInsights(projectId)
+      .then(setInsights)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [projectId])
+
+  if (loading) return <div className="text-gray-500 text-sm py-10 text-center">Loading insights...</div>
+  if (insights.length === 0) return <div className="text-gray-500 text-sm py-10 text-center">No insights yet.</div>
+
   return (
     <div className="space-y-4">
       {insights.map((insight) => (
@@ -103,22 +175,35 @@ function InsightsTab() {
         >
           <div className="flex-1">
             <h3 className="font-semibold text-white text-sm mb-1">💡 {insight.title}</h3>
-            <p className="text-xs text-gray-400 mb-3">{insight.description}</p>
-            <span className="text-[10px] text-gray-500">{insight.linkedPapers} linked papers</span>
+            <p className="text-xs text-gray-400 mb-3">{insight.content}</p>
+            <span className="text-[10px] text-gray-500">
+              {insight._count?.linkedPapers || 0} linked papers
+            </span>
           </div>
-          <button className="text-xs bg-[#1A6FBF]/20 text-[#00B4D8] hover:bg-[#1A6FBF]/30 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-            🕸️ View in Graph
-          </button>
         </div>
       ))}
     </div>
   )
 }
 
-function WorkflowTab() {
+function WorkflowTab({ projectId }) {
+  const [experiments, setExperiments] = useState([])
+
+  useEffect(() => {
+    if (!projectId) return
+    api.getExperiments(projectId).then(setExperiments).catch(console.error)
+  }, [projectId])
+
+  const columns = [
+    { title: 'Pending', items: experiments.filter((e) => e.status === 'Pending') },
+    { title: 'Active', items: experiments.filter((e) => e.status === 'Active') },
+    { title: 'Completed', items: experiments.filter((e) => e.status === 'Completed') },
+    { title: 'Other', items: experiments.filter((e) => !['Pending', 'Active', 'Completed'].includes(e.status)) },
+  ].filter((col) => col.items.length > 0 || col.title !== 'Other')
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      {workflowColumns.map((col) => (
+      {columns.map((col) => (
         <div key={col.title} className="bg-[#0D1B2A] rounded-xl border border-white/5 p-4">
           <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#00B4D8]" />
@@ -129,21 +214,17 @@ function WorkflowTab() {
             {col.items.map((item) => (
               <div
                 key={item.id}
-                className="bg-[#1A2B3C] rounded-lg p-3 border border-white/5 hover:border-[#00B4D8]/20 transition-all duration-200 cursor-grab"
+                className="bg-[#1A2B3C] rounded-lg p-3 border border-white/5 hover:border-[#00B4D8]/20 transition-all duration-200"
               >
-                <p className="text-xs text-white mb-2">{item.text}</p>
-                <div className="flex flex-wrap gap-1">
-                  {item.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`text-[9px] px-1.5 py-0.5 rounded ${tagColors[tag] || 'bg-gray-500/20 text-gray-300'}`}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-xs text-white mb-1">{item.name}</p>
+                {item.hypothesis && (
+                  <p className="text-[10px] text-gray-500 line-clamp-2">{item.hypothesis}</p>
+                )}
               </div>
             ))}
+            {col.items.length === 0 && (
+              <p className="text-xs text-gray-600 text-center py-4">Empty</p>
+            )}
           </div>
         </div>
       ))}
@@ -157,15 +238,20 @@ export default function ProjectWorkspace() {
   const tabParam = searchParams.get('tab')
   const initialTab = tabParam ? tabs.findIndex(t => t.toLowerCase() === tabParam.toLowerCase()) : 0
   const [activeTab, setActiveTab] = useState(initialTab >= 0 ? initialTab : 0)
+  const [project, setProject] = useState(null)
 
-  const project = projects.find((p) => p.id === Number(id)) || projects[0]
+  useEffect(() => {
+    if (id && id !== 'new') {
+      api.getProject(id).then(setProject).catch(console.error)
+    }
+  }, [id])
 
   return (
     <div className="p-8">
       {/* Project Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-2">{project.name}</h1>
-        <p className="text-gray-400 text-sm max-w-2xl">{project.description}</p>
+        <h1 className="text-2xl font-bold text-white mb-2">{project?.name || 'Project Workspace'}</h1>
+        <p className="text-gray-400 text-sm max-w-2xl">{project?.description || ''}</p>
       </div>
 
       {/* Tabs */}
@@ -186,10 +272,10 @@ export default function ProjectWorkspace() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 0 && <PapersTab />}
-      {activeTab === 1 && <ExperimentsTab />}
-      {activeTab === 2 && <InsightsTab />}
-      {activeTab === 3 && <WorkflowTab />}
+      {activeTab === 0 && <PapersTab projectId={id} />}
+      {activeTab === 1 && <ExperimentsTab projectId={id} />}
+      {activeTab === 2 && <InsightsTab projectId={id} />}
+      {activeTab === 3 && <WorkflowTab projectId={id} />}
     </div>
   )
 }
