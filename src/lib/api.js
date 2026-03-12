@@ -70,6 +70,24 @@ export const api = {
   aiGaps: (projectContext) => request('/api/ai/gaps', { method: 'POST', body: JSON.stringify({ projectContext }) }),
   aiConnections: (insights) => request('/api/ai/connections', { method: 'POST', body: JSON.stringify({ insights }) }),
   aiChat: (message, projectContext) => request('/api/ai/chat', { method: 'POST', body: JSON.stringify({ message, projectContext }) }),
+  aiChatWithFile: (file, message, projectContext) => {
+    const token = getToken()
+    const form = new FormData()
+    form.append('file', file)
+    if (message) form.append('message', message)
+    if (projectContext) form.append('projectContext', projectContext)
+    return fetch(`${BASE_URL}/api/ai/chat-with-file`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }))
+        throw new Error(err.error || `Request failed: ${res.status}`)
+      }
+      return res.json()
+    })
+  },
 
   // Similarity
   compareDocs: (textA, textB) => request('/api/similarity/compare', { method: 'POST', body: JSON.stringify({ textA, textB }) }),

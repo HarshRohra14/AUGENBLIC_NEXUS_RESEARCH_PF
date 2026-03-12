@@ -1,6 +1,8 @@
 const express = require('express');
+const fs = require('fs');
 const authMiddleware = require('../middleware/auth');
 const aiService = require('../services/ai.service');
+const { upload, extractTextFromPDF } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -76,6 +78,43 @@ router.post('/chat', async (req, res, next) => {
 
     const response = await aiService.chatWithAI(message, projectContext || '');
     res.json({ response });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/ai/chat-with-file  (multipart/form-data)
+// Fields: file (PDF or txt), message (optional), projectContext (optional)
+router.post('/chat-with-file', upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'A file is required' });
+    }
+
+    const { message, projectContext } = req.body;
+    const filePath = req.file.path;
+    const originalName = req.file.originalname;
+    let fileText = '';
+
+    try {
+      if (req.file.mimetype === 'application/pdf') {
+        fileText = await extractTextFromPDF(filePath);
+      } else {
+        fileText = fs.readFileSync(filePath, 'utf-8');
+      }
+    } finally {
+      // Clean up temp file
+      fs.unlink(filePath, () => {});
+    }
+
+    // Truncate to ~6000 chars to stay within model context
+    const truncated = fileText.slice(0, 6000);
+    const prompt = message
+      ? `The user uploaded a file called "${originalName}". Here is its content:\n\n${truncated}\n\nUser question: ${message}`
+      : `The user uploaded a file called "${originalName}". Please summarize and analyse the key ideas from its content:\n\n${truncated}`;
+
+    const response = await aiService.chatWithAI(prompt, projectContext || '');
+    res.json({ response, fileName: originalName });
   } catch (err) {
     next(err);
   }
