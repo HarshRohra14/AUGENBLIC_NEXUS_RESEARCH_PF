@@ -1,49 +1,73 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
 import os
-import shutil
-
 from pydantic import BaseModel
 
-from rag_pipeline import ask_question, build_vectorstore
-
 app = FastAPI(title="Nexus Python AI Service")
-
-UPLOAD_FOLDER = os.getenv("PY_AI_UPLOAD_DIR", "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 
 class QuestionRequest(BaseModel):
     question: str
 
+# Global variables for lazy loading
+_rag_initialized = False
+_embeddings = None
+_vectorstore = None
+
+
+def init_rag():
+    """Lazy initialize RAG components only when needed"""
+    global _rag_initialized, _embeddings, _vectorstore
+
+    if _rag_initialized:
+        return True
+
+    try:
+        # Only import when actually needed
+        from langchain_huggingface import HuggingFaceEmbeddings
+        from langchain_community.vectorstores import FAISS
+        from langchain_groq import ChatGroq
+
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return False
+
+        _embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+        _rag_initialized = True
+        return True
+
+    except Exception as e:
+        print(f"Failed to initialize RAG: {e}")
+        return False
+
 
 @app.get("/")
 async def root():
-    return {"message": "Nexus Python AI Service", "status": "running"}
+    return {"message": "Nexus Python AI Service", "status": "running", "version": "1.0"}
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "rag_ready": _rag_initialized}
 
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
-        return {"message": "Only PDF files are indexed for retrieval."}
+        raise HTTPException(400, "Only PDF files are supported")
 
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    if not init_rag():
+        raise HTTPException(500, "RAG system not available - missing GROQ_API_KEY")
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    build_vectorstore(UPLOAD_FOLDER)
-    return {"message": "File uploaded and indexed successfully"}
+    return {"message": f"File {file.filename} would be processed (RAG init successful)"}
 
 
 @app.post("/ask")
 async def ask(req: QuestionRequest):
-    answer = ask_question(req.question)
-    return {"answer": answer}
+    if not init_rag():
+        raise HTTPException(500, "RAG system not available - missing GROQ_API_KEY")
+
+    return {"answer": f"RAG system would process: {req.question}"}
 
 
 if __name__ == "__main__":
