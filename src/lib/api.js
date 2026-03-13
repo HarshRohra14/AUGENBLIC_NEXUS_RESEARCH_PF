@@ -87,7 +87,12 @@ export const api = {
   aiSummarize: (text) => request('/api/ai/summarize', { method: 'POST', body: JSON.stringify({ text }) }),
   aiKeywords: (text) => request('/api/ai/keywords', { method: 'POST', body: JSON.stringify({ text }) }),
   aiGaps: (projectContext) => request('/api/ai/gaps', { method: 'POST', body: JSON.stringify({ projectContext }) }),
-  aiConnections: (insights) => request('/api/ai/connections', { method: 'POST', body: JSON.stringify({ insights }) }),
+  aiConnections: (insightsOrContext) => {
+    const body = Array.isArray(insightsOrContext)
+      ? { insights: insightsOrContext }
+      : { projectContext: insightsOrContext }
+    return request('/api/ai/connections', { method: 'POST', body: JSON.stringify(body) })
+  },
   aiChat: (message, projectContext) => request('/api/ai/chat', { method: 'POST', body: JSON.stringify({ message, projectContext }) }),
   aiChatWithFile: (file, message, projectContext) => {
     const token = getToken()

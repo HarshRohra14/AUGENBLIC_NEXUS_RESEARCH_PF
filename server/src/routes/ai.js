@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const authMiddleware = require('../middleware/auth');
 const aiService = require('../services/ai.service');
-const { upload, extractTextFromPDF } = require('../middleware/upload');
+const { upload } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -56,13 +56,19 @@ router.post('/gaps', async (req, res, next) => {
 // POST /api/ai/connections
 router.post('/connections', async (req, res, next) => {
   try {
-    const { insights } = req.body;
-    if (!insights || !Array.isArray(insights) || insights.length === 0) {
-      return res.status(400).json({ error: 'Insights array is required' });
+    const { insights, projectContext } = req.body;
+
+    if (Array.isArray(insights) && insights.length > 0) {
+      const connections = await aiService.suggestConnections(insights);
+      return res.json({ connections });
     }
 
-    const connections = await aiService.suggestConnections(insights);
-    res.json({ connections });
+    if (projectContext) {
+      const connections = await aiService.suggestConnectionsFromContext(projectContext);
+      return res.json({ connections });
+    }
+
+    return res.status(400).json({ error: 'Insights array or project context is required' });
   } catch (err) {
     next(err);
   }
@@ -94,27 +100,20 @@ router.post('/chat-with-file', upload.single('file'), async (req, res, next) => 
     const { message, projectContext } = req.body;
     const filePath = req.file.path;
     const originalName = req.file.originalname;
-    let fileText = '';
 
     try {
-      if (req.file.mimetype === 'application/pdf') {
-        fileText = await extractTextFromPDF(filePath);
-      } else {
-        fileText = fs.readFileSync(filePath, 'utf-8');
-      }
+      const response = await aiService.chatWithFile(
+        filePath,
+        originalName,
+        message,
+        projectContext || '',
+        req.file.mimetype
+      );
+      return res.json({ response, fileName: originalName });
     } finally {
       // Clean up temp file
       fs.unlink(filePath, () => {});
     }
-
-    // Truncate to ~6000 chars to stay within model context
-    const truncated = fileText.slice(0, 6000);
-    const prompt = message
-      ? `The user uploaded a file called "${originalName}". Here is its content:\n\n${truncated}\n\nUser question: ${message}`
-      : `The user uploaded a file called "${originalName}". Please summarize and analyse the key ideas from its content:\n\n${truncated}`;
-
-    const response = await aiService.chatWithAI(prompt, projectContext || '');
-    res.json({ response, fileName: originalName });
   } catch (err) {
     next(err);
   }
