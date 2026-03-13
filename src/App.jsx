@@ -18,6 +18,7 @@ export default function App() {
       <Route path="/auth/callback" element={<OAuthCallback />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/about" element={<Landing />} />
         <Route path="/project/:id" element={<ProjectWorkspace />} />
         <Route path="/graph" element={<InsightGraph />} />
         <Route path="/assistant" element={<AIAssistant />} />

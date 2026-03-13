@@ -95,14 +95,17 @@ export default function InsightGraph() {
     setLoading(true)
     api.getGraph(selectedProject)
       .then((data) => {
-        // data = { nodes: [{id, label, type, x?, y?}], edges: [[aId, bId], ...] }
+        // data = { nodes: [...], edges: [[aId, bId], ...] } or [{ from, to }, ...]
         const nodes = (data.nodes || []).map((n, i) => ({
           ...n,
           x: n.x ?? 120 + (i % 5) * 180,
           y: n.y ?? 120 + Math.floor(i / 5) * 150,
         }))
+        const edges = (data.edges || [])
+          .map((e) => Array.isArray(e) ? e : [e.from, e.to])
+          .filter(([a, b]) => a && b)
         setGraphNodes(nodes)
-        setGraphEdges(data.edges || [])
+        setGraphEdges(edges)
         setSelectedNode(null)
       })
       .catch(console.error)

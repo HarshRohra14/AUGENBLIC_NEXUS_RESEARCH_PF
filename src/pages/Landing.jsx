@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const features = [
@@ -95,12 +95,17 @@ const stack = [
 export default function Landing() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const isAboutPage = location.pathname === '/about'
+  const initials = user?.name
+    ? user.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+    : 'U'
 
   useEffect(() => {
-    if (!loading && user) navigate('/dashboard', { replace: true })
-  }, [user, loading, navigate])
+    if (!loading && user && !isAboutPage) navigate('/dashboard', { replace: true })
+  }, [user, loading, navigate, isAboutPage])
 
-  if (loading) return null
+  if (loading && !isAboutPage) return null
 
   return (
     <div className="min-h-screen bg-[#0A000F] text-white overflow-x-hidden">
@@ -111,10 +116,30 @@ export default function Landing() {
           <span className="ml-2 text-xs text-gray-500 tracking-widest uppercase">Research Intelligence</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link to="/login" className="text-sm text-gray-400 hover:text-white transition-colors px-4 py-2">Sign In</Link>
-          <Link to="/login" className="text-sm bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-5 py-2 rounded-xl font-medium transition-colors">
-            Get Started Free →
-          </Link>
+          {user ? (
+            <>
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name || 'User'} className="w-7 h-7 rounded-full object-cover" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-linear-to-br from-[#A855F7] to-[#7C3AED] flex items-center justify-center text-xs font-bold text-white">
+                    {initials}
+                  </div>
+                )}
+                <span className="text-sm text-gray-200 max-w-40 truncate">{user.name || 'Researcher'}</span>
+              </div>
+              <Link to="/dashboard" className="text-sm bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-5 py-2 rounded-xl font-medium transition-colors">
+                Dashboard →
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm text-gray-400 hover:text-white transition-colors px-4 py-2">Sign In</Link>
+              <Link to="/login" className="text-sm bg-[#A855F7] hover:bg-[#A855F7]/80 text-white px-5 py-2 rounded-xl font-medium transition-colors">
+                Get Started Free →
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -128,10 +153,6 @@ export default function Landing() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-[#A855F7]/10 border border-[#A855F7]/30 rounded-full px-4 py-1.5 text-xs text-[#A855F7] font-medium mb-8 tracking-wider uppercase">
-            🏆 Augenblick Hackathon · Problem Statement 1
-          </div>
-
           <h1 className="text-6xl md:text-7xl font-black tracking-tight mb-6 leading-none">
             <span className="text-white">NEXUS</span>
             <br />

@@ -391,7 +391,7 @@ function InsightsTab({ projectId }) {
               <h3 className="font-semibold text-white text-sm mb-1">💡 {insight.title}</h3>
               <p className="text-xs text-gray-400 mb-3">{insight.description || insight.content}</p>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-gray-500">{insight._count?.linkedPapers || 0} linked papers</span>
+                <span className="text-[10px] text-gray-500">{insight._count?.papers || 0} linked papers</span>
                 {insight.fileUrl && (
                   <a href={`http://localhost:3000${insight.fileUrl}`} target="_blank" rel="noopener noreferrer"
                     className="text-[10px] text-purple-400 hover:text-purple-300 transition-colors">
