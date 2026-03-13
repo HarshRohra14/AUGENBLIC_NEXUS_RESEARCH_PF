@@ -4,8 +4,10 @@ from pydantic import BaseModel
 
 app = FastAPI(title="Nexus Python AI Service")
 
+
 class QuestionRequest(BaseModel):
     question: str
+
 
 # Global variables for lazy loading
 _rag_initialized = False
@@ -21,7 +23,6 @@ def init_rag():
         return True
 
     try:
-        # Only import when actually needed
         from langchain_huggingface import HuggingFaceEmbeddings
         from langchain_community.vectorstores import FAISS
         from langchain_groq import ChatGroq
@@ -33,6 +34,7 @@ def init_rag():
         _embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
+
         _rag_initialized = True
         return True
 
@@ -43,7 +45,11 @@ def init_rag():
 
 @app.get("/")
 async def root():
-    return {"message": "Nexus Python AI Service", "status": "running", "version": "1.0"}
+    return {
+        "message": "Nexus Python AI Service",
+        "status": "running",
+        "version": "1.0",
+    }
 
 
 @app.get("/health")
@@ -72,5 +78,6 @@ async def ask(req: QuestionRequest):
 
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
