@@ -12,10 +12,11 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 load_dotenv()
 
 api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    raise RuntimeError("GROQ_API_KEY is required for python_ai service")
-
-llm = ChatGroq(model="llama-3.1-8b-instant", api_key=api_key)
+if api_key:
+    llm = ChatGroq(model="llama-3.1-8b-instant", api_key=api_key)
+else:
+    print("Warning: GROQ_API_KEY not found. RAG functionality will be limited.")
+    llm = None
 
 vectorstore = None
 retriever = None
@@ -91,6 +92,9 @@ def retrieve_diverse(query, k_per_paper=2, k_total=10):
 def ask_question(query):
     if retriever is None:
         return "No documents uploaded yet. Upload at least one PDF first."
+
+    if llm is None:
+        return "RAG service is not properly configured. GROQ_API_KEY is missing."
 
     docs = retrieve_diverse(query)
 
