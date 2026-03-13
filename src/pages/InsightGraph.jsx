@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
 
 const typeColors = {
-  paper: { bg: 'bg-[#7C3AED]', border: 'border-[#7C3AED]', text: 'text-[#7C3AED]' },
-  insight: { bg: 'bg-[#A855F7]', border: 'border-[#A855F7]', text: 'text-[#A855F7]' },
-  experiment: { bg: 'bg-emerald-500', border: 'border-emerald-500', text: 'text-emerald-400' },
+  paper: { bg: 'bg-[#00B4D8]', border: 'border-[#00B4D8]', text: 'text-[#00B4D8]' },
+  insight: { bg: 'bg-[#7C3AED]', border: 'border-[#7C3AED]', text: 'text-[#7C3AED]' },
+  experiment: { bg: 'bg-[#F4A261]', border: 'border-[#F4A261]', text: 'text-[#F4A261]' },
 }
 
 const nodeDetails = {

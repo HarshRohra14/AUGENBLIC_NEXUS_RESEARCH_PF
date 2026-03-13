@@ -82,6 +82,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
   const [stats, setStats] = useState({ projects: 0, papers: 0, insights: 0, experiments: 0 })
+  const [me, setMe] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showNewProject, setShowNewProject] = useState(false)
 
@@ -89,13 +90,30 @@ export default function Dashboard() {
     api.getProjects()
       .then((data) => {
         setProjects(data)
-        setStats((s) => ({ ...s, projects: data.length }))
+        const totals = data.reduce((acc, p) => {
+          acc.papers += p?._count?.papers || 0
+          acc.insights += p?._count?.insights || 0
+          acc.experiments += p?._count?.experiments || 0
+          return acc
+        }, { papers: 0, insights: 0, experiments: 0 })
+
+        setStats({
+          projects: data.length,
+          papers: totals.papers,
+          insights: totals.insights,
+          experiments: totals.experiments,
+        })
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { loadProjects() }, [])
+
+  useEffect(() => {
+    if (user) return
+    api.me().then(setMe).catch(() => {})
+  }, [user])
 
   const displayStats = [
     { label: 'Projects', value: stats.projects, icon: '📁' },
@@ -104,7 +122,10 @@ export default function Dashboard() {
     { label: 'Experiments', value: stats.experiments, icon: '🔬' },
   ]
 
-  const firstName = user?.name?.trim() ? user.name.trim().split(' ')[0] : (user?.email?.split('@')[0] || 'Researcher')
+  const effectiveUser = user || me
+  const displayName = effectiveUser?.name?.trim()
+    ? effectiveUser.name.trim()
+    : (effectiveUser?.email?.split('@')[0] || 'Researcher')
 
   return (
     <div className="p-8">
@@ -122,7 +143,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-gray-400 text-sm mt-1">Welcome back, {firstName}</p>
+          <p className="text-gray-400 text-sm mt-1">Welcome back, {displayName}</p>
         </div>
         <button
           onClick={() => setShowNewProject(true)}
