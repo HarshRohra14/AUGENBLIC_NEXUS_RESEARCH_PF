@@ -1,17 +1,17 @@
-fastapi==0.115.6
-uvicorn[standard]==0.32.1
-python-multipart==0.0.17
-python-dotenv==1.0.1
+fastapi>=0.100.0,<0.116.0
+uvicorn[standard]>=0.24.0,<0.33.0
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
 
-langchain==0.3.17
-langchain-community==0.3.16
-langchain-groq==0.2.6
-langchain-text-splitters==0.3.2
+langchain>=0.1.0,<0.4.0
+langchain-community>=0.0.10,<0.4.0
+langchain-groq>=0.1.0
+langchain-text-splitters>=0.0.1,<0.4.0
 
-sentence-transformers==3.3.1
-faiss-cpu==1.13.2
-pymupdf==1.24.14
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.0
+PyMuPDF>=1.20.0
 
-transformers==4.47.1
-torch==2.5.1
-pydantic==2.10.4
+transformers>=4.20.0
+torch>=1.12.0
+pydantic>=2.0.0
